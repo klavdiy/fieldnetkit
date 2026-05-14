@@ -1,0 +1,139 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "serialNumber": "urn:uuid:e1d4b66f-0092-54cb-a4d0-5c9567af7954",
+  "metadata": {
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tools": [
+      {
+        "vendor": "klavdiy",
+        "name": "generate_sbom.py"
+      }
+    ],
+    "component": {
+      "bom-ref": "app:ip_checker@0.1.0",
+      "type": "application",
+      "name": "ip_checker",
+      "version": "0.1.0",
+      "description": "CLI utility for IP/ASN geo checks and network diagnostics",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "framework",
+      "name": "python",
+      "version": "3.10",
+      "purl": "pkg:generic/python@3.10",
+      "scope": "required",
+      "bom-ref": "pkg:generic/python@3.10"
+    },
+    {
+      "type": "library",
+      "name": "geoip2",
+      "purl": "pkg:pypi/geoip2",
+      "scope": "optional",
+      "description": "Optional enrichment provider (MaxMind)",
+      "bom-ref": "pkg:pypi/geoip2"
+    },
+    {
+      "type": "library",
+      "name": "IP2Location",
+      "purl": "pkg:pypi/ip2location",
+      "scope": "optional",
+      "description": "Optional enrichment provider (IP2Location)",
+      "bom-ref": "pkg:pypi/ip2location"
+    },
+    {
+      "type": "application",
+      "name": "whois",
+      "version": "1.0+",
+      "purl": "pkg:generic/whois@1.0",
+      "scope": "required",
+      "description": "System CLI utility used for ASN/WHOIS lookups",
+      "bom-ref": "pkg:generic/whois@1.0"
+    },
+    {
+      "type": "application",
+      "name": "ping",
+      "purl": "pkg:generic/ping",
+      "scope": "required",
+      "description": "System CLI utility used in diagnostics",
+      "bom-ref": "pkg:generic/ping"
+    },
+    {
+      "type": "application",
+      "name": "traceroute",
+      "purl": "pkg:generic/traceroute",
+      "scope": "optional",
+      "description": "System CLI utility (or tracert on Windows) for route diagnostics",
+      "bom-ref": "pkg:generic/traceroute"
+    },
+    {
+      "type": "application",
+      "name": "tracert",
+      "purl": "pkg:generic/tracert",
+      "scope": "optional",
+      "description": "Windows route diagnostics utility alternative to traceroute",
+      "bom-ref": "pkg:generic/tracert"
+    },
+    {
+      "type": "application",
+      "name": "nslookup",
+      "purl": "pkg:generic/nslookup",
+      "scope": "optional",
+      "description": "System CLI utility for DNS checks",
+      "bom-ref": "pkg:generic/nslookup"
+    },
+    {
+      "type": "application",
+      "name": "nmap",
+      "purl": "pkg:generic/nmap",
+      "scope": "optional",
+      "description": "System CLI utility for extended network scanning",
+      "bom-ref": "pkg:generic/nmap"
+    },
+    {
+      "type": "application",
+      "name": "tcpdump",
+      "purl": "pkg:generic/tcpdump",
+      "scope": "optional",
+      "description": "System CLI utility for packet capture and fallback PCAP read",
+      "bom-ref": "pkg:generic/tcpdump"
+    },
+    {
+      "type": "application",
+      "name": "tshark",
+      "purl": "pkg:generic/tshark",
+      "scope": "optional",
+      "description": "System CLI utility for detailed PCAP decoding",
+      "bom-ref": "pkg:generic/tshark"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "app:ip_checker@0.1.0",
+      "dependsOn": [
+        "pkg:generic/python@3.10",
+        "pkg:pypi/geoip2",
+        "pkg:pypi/ip2location",
+        "pkg:generic/whois@1.0",
+        "pkg:generic/ping",
+        "pkg:generic/traceroute",
+        "pkg:generic/tracert",
+        "pkg:generic/nslookup",
+        "pkg:generic/nmap",
+        "pkg:generic/tcpdump",
+        "pkg:generic/tshark"
+      ]
+    }
+  ]
+}
