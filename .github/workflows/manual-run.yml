@@ -1,0 +1,141 @@
+name: Manual Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      ip:
+        description: "Single IP to check (e.g. 8.8.8.8)"
+        required: false
+        type: string
+      asn:
+        description: "ASN to check (e.g. AS12389)"
+        required: false
+        type: string
+      range_start:
+        description: "Range start IP"
+        required: false
+        type: string
+      range_end:
+        description: "Range end IP"
+        required: false
+        type: string
+      save:
+        description: "Save results to scan_results.json"
+        required: false
+        default: false
+        type: boolean
+      auto_reclass:
+        description: "Enable --auto-reclass"
+        required: false
+        default: false
+        type: boolean
+      quiet:
+        description: "Enable --quiet (works only with auto_reclass)"
+        required: false
+        default: false
+        type: boolean
+      max_ips:
+        description: "Max IPs for range mode"
+        required: false
+        type: string
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Validate inputs and build command
+        id: build
+        shell: bash
+        env:
+          INPUT_IP: ${{ github.event.inputs.ip }}
+          INPUT_ASN: ${{ github.event.inputs.asn }}
+          INPUT_RANGE_START: ${{ github.event.inputs.range_start }}
+          INPUT_RANGE_END: ${{ github.event.inputs.range_end }}
+          INPUT_SAVE: ${{ github.event.inputs.save }}
+          INPUT_AUTO_RECLASS: ${{ github.event.inputs.auto_reclass }}
+          INPUT_QUIET: ${{ github.event.inputs.quiet }}
+          INPUT_MAX_IPS: ${{ github.event.inputs.max_ips }}
+        run: |
+          set -euo pipefail
+
+          command=(python ip_checker.py)
+          mode_count=0
+
+          if [[ -n "${INPUT_IP}" ]]; then
+            command+=(--ip "${INPUT_IP}")
+            mode_count=$((mode_count + 1))
+          fi
+
+          if [[ -n "${INPUT_ASN}" ]]; then
+            command+=(--asn "${INPUT_ASN}")
+            mode_count=$((mode_count + 1))
+          fi
+
+          if [[ -n "${INPUT_RANGE_START}" || -n "${INPUT_RANGE_END}" ]]; then
+            if [[ -z "${INPUT_RANGE_START}" || -z "${INPUT_RANGE_END}" ]]; then
+              echo "Both range_start and range_end are required for range mode."
+              exit 1
+            fi
+            command+=(--range "${INPUT_RANGE_START}" "${INPUT_RANGE_END}")
+            mode_count=$((mode_count + 1))
+          fi
+
+          if [[ "${mode_count}" -eq 0 ]]; then
+            echo "Provide one mode: ip, asn, or range_start+range_end."
+            exit 1
+          fi
+
+          if [[ "${mode_count}" -gt 1 ]]; then
+            echo "Use only one mode at a time: ip OR asn OR range."
+            exit 1
+          fi
+
+          if [[ "${INPUT_SAVE}" == "true" ]]; then
+            command+=(--save)
+          fi
+
+          if [[ "${INPUT_AUTO_RECLASS}" == "true" ]]; then
+            command+=(--auto-reclass)
+          fi
+
+          if [[ "${INPUT_QUIET}" == "true" ]]; then
+            if [[ "${INPUT_AUTO_RECLASS}" != "true" ]]; then
+              echo "--quiet requires auto_reclass=true."
+              exit 1
+            fi
+            command+=(--quiet)
+          fi
+
+          if [[ -n "${INPUT_MAX_IPS}" ]]; then
+            if ! [[ "${INPUT_MAX_IPS}" =~ ^[0-9]+$ ]]; then
+              echo "max_ips must be a non-negative integer."
+              exit 1
+            fi
+            command+=(--max-ips "${INPUT_MAX_IPS}")
+          fi
+
+          # Single shell-quoted line — avoid broken multi-line GITHUB_OUTPUT from printf per-arg.
+          joined="$(printf '%q ' "${command[@]}")"
+          printf '%s\n' "${joined}" > "${GITHUB_WORKSPACE}/.manual_run_cmd.txt"
+
+      - name: Run ip_checker
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_cmd="$(tr -d '\n' < "${GITHUB_WORKSPACE}/.manual_run_cmd.txt")"
+          echo "Running: ${run_cmd}"
+          eval "${run_cmd}"
+
+      - name: Upload scan results artifact
+        if: always() && hashFiles('scan_results.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-results
+          path: scan_results.json
