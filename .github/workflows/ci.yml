@@ -1,0 +1,42 @@
+# CI для ip_checker: синтаксис Python и минимальный smoke-тест CLI.
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # README: Python 3.10+; см. поддерживаемые версии setup-python на ubuntu-latest.
+        python-version: ["3.10", "3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Compile bytecode
+        run: python -m compileall -q ip_checker.py network_diag.py pcap_diag.py
+
+      - name: CLI help (argparse loads)
+        run: python ip_checker.py -h
+
+      - name: Import modules
+        run: python -c "import ip_checker; import network_diag; import pcap_diag"
+
+      - name: Regenerate SBOM files
+        if: matrix.python-version == '3.10'
+        run: python tools/generate_sbom.py
+
+      - name: Ensure SBOM files are up to date
+        if: matrix.python-version == '3.10'
+        run: git diff --exit-code -- sbom.cdx.json sbom.spdx.json
