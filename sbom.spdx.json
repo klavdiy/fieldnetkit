@@ -1,0 +1,284 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "ip_checker-sbom",
+  "documentNamespace": "https://example.local/spdx/ip_checker/6f7be047a274",
+  "creationInfo": {
+    "created": "2026-01-01T00:00:00Z",
+    "creators": [
+      "Tool: generate_sbom.py"
+    ],
+    "licenseListVersion": "3.25"
+  },
+  "documentDescribes": [
+    "SPDXRef-Package-ip_checker"
+  ],
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-ip_checker",
+      "name": "ip_checker",
+      "versionInfo": "0.1.0",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "filesAnalyzed": false,
+      "primaryPackagePurpose": "APPLICATION"
+    },
+    {
+      "SPDXID": "SPDXRef-7f3f21bcf4db",
+      "name": "python",
+      "versionInfo": "3.10",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/python@3.10"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": ""
+    },
+    {
+      "SPDXID": "SPDXRef-d7133a91d1b9",
+      "name": "geoip2",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/geoip2"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY",
+      "description": "Optional enrichment provider (MaxMind)"
+    },
+    {
+      "SPDXID": "SPDXRef-d43940a3858a",
+      "name": "IP2Location",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/ip2location"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY",
+      "description": "Optional enrichment provider (IP2Location)"
+    },
+    {
+      "SPDXID": "SPDXRef-510544e60710",
+      "name": "whois",
+      "versionInfo": "1.0+",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/whois@1.0"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "System CLI utility used for ASN/WHOIS lookups"
+    },
+    {
+      "SPDXID": "SPDXRef-57c99176b7f3",
+      "name": "ping",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/ping"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "System CLI utility used in diagnostics"
+    },
+    {
+      "SPDXID": "SPDXRef-83f9a283d398",
+      "name": "traceroute",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/traceroute"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "System CLI utility (or tracert on Windows) for route diagnostics"
+    },
+    {
+      "SPDXID": "SPDXRef-76efa99bfde4",
+      "name": "tracert",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/tracert"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "Windows route diagnostics utility alternative to traceroute"
+    },
+    {
+      "SPDXID": "SPDXRef-eccf1220f06f",
+      "name": "nslookup",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/nslookup"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "System CLI utility for DNS checks"
+    },
+    {
+      "SPDXID": "SPDXRef-24687a578232",
+      "name": "nmap",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/nmap"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "System CLI utility for extended network scanning"
+    },
+    {
+      "SPDXID": "SPDXRef-9a0b5935eedd",
+      "name": "tcpdump",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/tcpdump"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "System CLI utility for packet capture and fallback PCAP read"
+    },
+    {
+      "SPDXID": "SPDXRef-b26aa4d9c967",
+      "name": "tshark",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/tshark"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "System CLI utility for detailed PCAP decoding"
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-7f3f21bcf4db"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-d7133a91d1b9"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-d43940a3858a"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-510544e60710"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-57c99176b7f3"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-83f9a283d398"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-76efa99bfde4"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-eccf1220f06f"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-24687a578232"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-9a0b5935eedd"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-b26aa4d9c967"
+    }
+  ]
+}
