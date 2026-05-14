@@ -1,0 +1,39 @@
+name: Bug report
+description: Сообщить об ошибке в работе скрипта или документации
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Заполните поля ниже. Уязвимости — по [политике безопасности](https://github.com/klavdiy/ip_checker/blob/main/.github/SECURITY.md), без публикации эксплойта в Issue.
+  - type: textarea
+    id: what
+    attributes:
+      label: Что происходит?
+      description: Фактическое поведение.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидалось
+      description: Как должно работать.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Как воспроизвести
+      description: Команды, ОС, версия Python (`python3 --version`).
+      placeholder: |
+        OS: …
+        Python: …
+        Команда: python3 ip_checker.py …
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Дополнительно
+      description: Логи, скриншоты, контекст.
