@@ -1,0 +1,15 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local runtime/config artifacts
+.language_config
+scan_results.json
+.enrichment_config.json
+trace_sessions/
+network capture/
+
+# OS/editor local files
+.DS_Store
+*.code-workspace
