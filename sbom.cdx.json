@@ -38,7 +38,7 @@
       "name": "Python",
       "purl": "pkg:generic/python@3.10",
       "scope": "required",
-      "description": "Modules: fnkit.py, network_diag.py, pcap_diag.py, dns_diag.py, owasp_toolkit.py",
+      "description": "Modules: fnkit.py, paths.py, lib/network_diag.py, lib/pcap_diag.py, lib/dns_diag.py, lib/owasp_toolkit.py, lib/pdns_lookup.py, lib/ip_egress_check.py, lib/ptr_scan.py, lib/subdomain_takeover.py",
       "version": "3.10",
       "licenses": [
         {
@@ -99,7 +99,7 @@
       "name": "ping",
       "purl": "pkg:generic/ping",
       "scope": "required",
-      "description": "Modules: network_diag.py",
+      "description": "Modules: lib/network_diag.py",
       "properties": [
         {
           "name": "fnkit:install:macos",
@@ -121,7 +121,7 @@
       "name": "traceroute",
       "purl": "pkg:generic/traceroute",
       "scope": "optional",
-      "description": "Modules: network_diag.py, fnkit.py; Feature: diagnostics",
+      "description": "Modules: lib/network_diag.py, fnkit.py; Feature: diagnostics",
       "properties": [
         {
           "name": "fnkit:featureGroup",
@@ -147,7 +147,7 @@
       "name": "tracert",
       "purl": "pkg:generic/tracert",
       "scope": "optional",
-      "description": "Modules: network_diag.py; Feature: diagnostics",
+      "description": "Modules: lib/network_diag.py; Feature: diagnostics",
       "properties": [
         {
           "name": "fnkit:featureGroup",
@@ -221,7 +221,7 @@
       "name": "tcpdump",
       "purl": "pkg:generic/tcpdump",
       "scope": "optional",
-      "description": "Modules: pcap_diag.py; Feature: pcap",
+      "description": "Modules: lib/pcap_diag.py; Feature: pcap",
       "properties": [
         {
           "name": "fnkit:featureGroup",
@@ -247,7 +247,7 @@
       "name": "tshark",
       "purl": "pkg:generic/tshark",
       "scope": "optional",
-      "description": "Modules: pcap_diag.py, dns_diag.py; Feature: pcap",
+      "description": "Modules: lib/pcap_diag.py, lib/dns_diag.py; Feature: pcap",
       "properties": [
         {
           "name": "fnkit:featureGroup",
@@ -277,7 +277,7 @@
       "name": "dnspython",
       "purl": "pkg:pypi/dnspython@2.4.0",
       "scope": "optional",
-      "description": "Modules: dns_diag.py; Feature: dns",
+      "description": "Modules: lib/dns_diag.py, lib/subdomain_takeover.py; Feature: dns",
       "version": "2.4.0",
       "licenses": [
         {
@@ -355,7 +355,7 @@
       "name": "amass",
       "purl": "pkg:generic/amass",
       "scope": "optional",
-      "description": "Modules: owasp_toolkit.py; Feature: owasp",
+      "description": "Modules: lib/owasp_toolkit.py, lib/subdomain_takeover.py; Feature: owasp",
       "licenses": [
         {
           "license": {
@@ -392,7 +392,7 @@
       "name": "nettacker",
       "purl": "pkg:generic/nettacker",
       "scope": "optional",
-      "description": "Modules: owasp_toolkit.py; Feature: owasp",
+      "description": "Modules: lib/owasp_toolkit.py; Feature: owasp",
       "licenses": [
         {
           "license": {
@@ -417,7 +417,7 @@
       "name": "ip-api.com",
       "purl": "pkg:generic/ip-api.com",
       "scope": "required",
-      "description": "Modules: fnkit.py, dns_diag.py; Feature: core",
+      "description": "Modules: fnkit.py, lib/dns_diag.py; Feature: core",
       "properties": [
         {
           "name": "fnkit:featureGroup",
@@ -435,7 +435,7 @@
       "name": "crt.sh",
       "purl": "pkg:generic/crt.sh",
       "scope": "optional",
-      "description": "Modules: dns_diag.py; Feature: dns",
+      "description": "Modules: lib/dns_diag.py; Feature: dns",
       "properties": [
         {
           "name": "fnkit:featureGroup",
@@ -453,7 +453,7 @@
       "name": "speed.cloudflare.com",
       "purl": "pkg:generic/speed.cloudflare.com",
       "scope": "optional",
-      "description": "Modules: network_diag.py; Feature: speedtest",
+      "description": "Modules: lib/network_diag.py; Feature: speedtest",
       "properties": [
         {
           "name": "fnkit:featureGroup",

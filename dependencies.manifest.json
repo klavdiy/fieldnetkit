@@ -54,11 +54,16 @@
       "purl": "pkg:generic/python@3.10",
       "license": "PSF-2.0",
       "modules": [
-        "lib/fnkit.py",
+        "fnkit.py",
+        "paths.py",
         "lib/network_diag.py",
         "lib/pcap_diag.py",
         "lib/dns_diag.py",
-        "lib/owasp_toolkit.py"
+        "lib/owasp_toolkit.py",
+        "lib/pdns_lookup.py",
+        "lib/ip_egress_check.py",
+        "lib/ptr_scan.py",
+        "lib/subdomain_takeover.py"
       ],
       "check": {
         "kind": "python_version",
@@ -96,7 +101,7 @@
       "purl": "pkg:generic/whois@1.0",
       "license": "NOASSERTION",
       "modules": [
-        "lib/fnkit.py"
+        "fnkit.py"
       ],
       "check": {
         "kind": "cli",
@@ -163,7 +168,7 @@
       "feature_group": "diagnostics",
       "modules": [
         "lib/network_diag.py",
-        "lib/fnkit.py"
+        "fnkit.py"
       ],
       "check": {
         "kind": "cli_any",
@@ -222,7 +227,7 @@
       "license": "NOASSERTION",
       "feature_group": "diagnostics",
       "modules": [
-        "lib/fnkit.py"
+        "fnkit.py"
       ],
       "check": {
         "kind": "cli",
@@ -253,7 +258,7 @@
       "license": "NOASSERTION",
       "feature_group": "scan",
       "modules": [
-        "lib/fnkit.py"
+        "fnkit.py"
       ],
       "check": {
         "kind": "cli",
@@ -363,7 +368,8 @@
       "license": "ISC",
       "feature_group": "dns",
       "modules": [
-        "lib/dns_diag.py"
+        "lib/dns_diag.py",
+        "lib/subdomain_takeover.py"
       ],
       "check": {
         "kind": "pip",
@@ -389,7 +395,7 @@
       "license": "Apache-2.0",
       "feature_group": "enrichment",
       "modules": [
-        "lib/fnkit.py"
+        "fnkit.py"
       ],
       "check": {
         "kind": "pip",
@@ -414,7 +420,7 @@
       "license": "MIT",
       "feature_group": "enrichment",
       "modules": [
-        "lib/fnkit.py"
+        "fnkit.py"
       ],
       "check": {
         "kind": "pip",
@@ -438,7 +444,8 @@
       "license": "Apache-2.0",
       "feature_group": "owasp",
       "modules": [
-        "lib/owasp_toolkit.py"
+        "lib/owasp_toolkit.py",
+        "lib/subdomain_takeover.py"
       ],
       "check": {
         "kind": "cli",
@@ -492,7 +499,7 @@
       "license": "NOASSERTION",
       "feature_group": "core",
       "modules": [
-        "lib/fnkit.py",
+        "fnkit.py",
         "lib/dns_diag.py"
       ],
       "check": {
@@ -556,7 +563,7 @@
       "license": "NOASSERTION",
       "feature_group": "core",
       "modules": [
-        "lib/fnkit.py"
+        "fnkit.py"
       ],
       "check": {
         "kind": "note",

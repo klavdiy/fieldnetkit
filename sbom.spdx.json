@@ -42,7 +42,7 @@
         }
       ],
       "primaryPackagePurpose": "FRAMEWORK",
-      "description": "Modules: fnkit.py, network_diag.py, pcap_diag.py, dns_diag.py, owasp_toolkit.py"
+      "description": "Modules: fnkit.py, paths.py, lib/network_diag.py, lib/pcap_diag.py, lib/dns_diag.py, lib/owasp_toolkit.py, lib/pdns_lookup.py, lib/ip_egress_check.py, lib/ptr_scan.py, lib/subdomain_takeover.py"
     },
     {
       "SPDXID": "SPDXRef-510544e60710",
@@ -78,7 +78,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: network_diag.py"
+      "description": "Modules: lib/network_diag.py"
     },
     {
       "SPDXID": "SPDXRef-83f9a283d398",
@@ -96,7 +96,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: network_diag.py, fnkit.py; Feature: diagnostics"
+      "description": "Modules: lib/network_diag.py, fnkit.py; Feature: diagnostics"
     },
     {
       "SPDXID": "SPDXRef-76efa99bfde4",
@@ -114,7 +114,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: network_diag.py; Feature: diagnostics"
+      "description": "Modules: lib/network_diag.py; Feature: diagnostics"
     },
     {
       "SPDXID": "SPDXRef-eccf1220f06f",
@@ -168,7 +168,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: pcap_diag.py; Feature: pcap"
+      "description": "Modules: lib/pcap_diag.py; Feature: pcap"
     },
     {
       "SPDXID": "SPDXRef-b26aa4d9c967",
@@ -186,7 +186,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: pcap_diag.py, dns_diag.py; Feature: pcap"
+      "description": "Modules: lib/pcap_diag.py, lib/dns_diag.py; Feature: pcap"
     },
     {
       "SPDXID": "SPDXRef-f2235cc92bee",
@@ -204,7 +204,7 @@
         }
       ],
       "primaryPackagePurpose": "LIBRARY",
-      "description": "Modules: dns_diag.py; Feature: dns"
+      "description": "Modules: lib/dns_diag.py, lib/subdomain_takeover.py; Feature: dns"
     },
     {
       "SPDXID": "SPDXRef-d7133a91d1b9",
@@ -258,7 +258,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: owasp_toolkit.py; Feature: owasp"
+      "description": "Modules: lib/owasp_toolkit.py, lib/subdomain_takeover.py; Feature: owasp"
     },
     {
       "SPDXID": "SPDXRef-fb9b6e66aa23",
@@ -276,7 +276,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: owasp_toolkit.py; Feature: owasp"
+      "description": "Modules: lib/owasp_toolkit.py; Feature: owasp"
     },
     {
       "SPDXID": "SPDXRef-18509dc2ccaa",
@@ -294,7 +294,7 @@
         }
       ],
       "primaryPackagePurpose": "OTHER",
-      "description": "Modules: fnkit.py, dns_diag.py; Feature: core"
+      "description": "Modules: fnkit.py, lib/dns_diag.py; Feature: core"
     },
     {
       "SPDXID": "SPDXRef-fc57b82df5d9",
@@ -312,7 +312,7 @@
         }
       ],
       "primaryPackagePurpose": "OTHER",
-      "description": "Modules: dns_diag.py; Feature: dns"
+      "description": "Modules: lib/dns_diag.py; Feature: dns"
     },
     {
       "SPDXID": "SPDXRef-e1e67bdda364",
@@ -330,7 +330,7 @@
         }
       ],
       "primaryPackagePurpose": "OTHER",
-      "description": "Modules: network_diag.py; Feature: speedtest"
+      "description": "Modules: lib/network_diag.py; Feature: speedtest"
     },
     {
       "SPDXID": "SPDXRef-0e8728032ecd",
