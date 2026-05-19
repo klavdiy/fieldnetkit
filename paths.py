@@ -28,14 +28,26 @@ DATABASE_FILE = DATA_DIR / "asn_database.json"
 RESULTS_FILE = DATA_DIR / "scan_results.json"
 LANGUAGE_FILE = CONFIG_DIR / ".language_config"
 ENRICHMENT_CONFIG_FILE = CONFIG_DIR / ".enrichment_config.json"
+PROVIDER_POLICIES_FILE = CONFIG_DIR / ".provider_policies.json"
+PROVIDER_POLICIES_EXAMPLE = CONFIG_DIR / "provider_policies.example.json"
+RUNTIME_MODE_FILE = CONFIG_DIR / ".runtime_mode.json"
 
 OWASP_SESSIONS_DIR = SESSIONS_DIR / "owasp"
 DNS_SESSIONS_DIR = SESSIONS_DIR / "dns"
 DNS_GRAPH_DIR = DATA_DIR / "dns_graph"
+PIVOT_GRAPH_DIR = DATA_DIR / "pivot_graph"
+PIVOT_SESSIONS_DIR = SESSIONS_DIR / "pivot"
 TRACE_SESSIONS_DIR = SESSIONS_DIR / "trace"
 PTR_SESSIONS_DIR = SESSIONS_DIR / "ptr"
 NETWORK_CAPTURE_DIR = DATA_DIR / "pcap"
 TOR_CACHE_DIR = CACHE_DIR / "tor"
+INTEL_CACHE_DIR = CACHE_DIR / "intel"
+INTEL_CACHE_CONFIG_FILE = CONFIG_DIR / ".intel_cache.json"
+INTEL_CACHE_CONFIG_EXAMPLE = CONFIG_DIR / "intel_cache.example.json"
+TOR_DAEMON_DIR = CACHE_DIR / "tor_daemon"
+TOR_CONFIG_FILE = CONFIG_DIR / ".tor_transport.json"
+TOR_BRIDGES_FILE = CONFIG_DIR / "tor_bridges.txt"
+TOR_BRIDGES_EXAMPLE = CONFIG_DIR / "tor_bridges.txt.example"
 
 # Legacy paths (pre data/ layout) → new location
 _LEGACY_MOVES: Tuple[Tuple[Path, Path], ...] = (
@@ -61,12 +73,16 @@ def ensure_data_layout() -> None:
         SESSIONS_DIR,
         CACHE_DIR,
         DNS_GRAPH_DIR,
+        PIVOT_GRAPH_DIR,
+        PIVOT_SESSIONS_DIR,
         OWASP_SESSIONS_DIR,
         DNS_SESSIONS_DIR,
         TRACE_SESSIONS_DIR,
         PTR_SESSIONS_DIR,
         NETWORK_CAPTURE_DIR,
         TOR_CACHE_DIR,
+        INTEL_CACHE_DIR,
+        TOR_DAEMON_DIR,
     ):
         d.mkdir(parents=True, exist_ok=True)
 

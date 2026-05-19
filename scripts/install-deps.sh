@@ -80,6 +80,14 @@ install_enrichment_pip() {
   pip_install -r "$REPO_ROOT/requirements-optional.txt"
 }
 
+install_tor() {
+  if [[ "$OS" == "macos" ]]; then
+    run_brew tor obfs4proxy || true
+  else
+    run_apt tor obfs4proxy || true
+  fi
+}
+
 install_owasp() {
   if [[ "$OS" == "macos" ]]; then
     run_brew amass || true
@@ -114,6 +122,9 @@ case "$GROUP" in
   owasp)
     install_owasp
     ;;
+  tor)
+    install_tor
+    ;;
   full|all)
     install_core
     install_diagnostics
@@ -125,7 +136,7 @@ case "$GROUP" in
     ;;
   *)
     echo "Unknown group: $GROUP"
-    echo "Use: minimal full dns pcap owasp enrichment diagnostics scan"
+    echo "Use: minimal full dns pcap owasp tor enrichment diagnostics scan"
     exit 2
     ;;
 esac

@@ -64,6 +64,10 @@
         "lib/pdns_lookup.py",
         "lib/ip_egress_check.py",
         "lib/ptr_scan.py",
+        "lib/ip_pivot_map.py",
+        "lib/provider_policies.py",
+        "lib/intel_cache.py",
+        "lib/runtime_mode.py",
         "lib/subdomain_takeover.py"
       ],
       "check": {

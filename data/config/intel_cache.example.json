@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "show_hits": false,
+  "ttl_seconds": {
+    "geo": 86400,
+    "whois": 604800,
+    "bgp": 21600,
+    "pdns": 43200,
+    "enrichment_maxmind": 86400,
+    "enrichment_ip2location": 86400
+  }
+}

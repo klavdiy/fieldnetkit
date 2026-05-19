@@ -46,6 +46,11 @@ import owasp_toolkit
 import pdns_lookup
 import ip_egress_check
 import ptr_scan
+import ip_pivot_map
+import provider_policies
+import intel_cache
+import runtime_mode
+import tor_transport
 MAX_POOLS_PER_ASN = 3  # legacy alias for ASN sampling display cap
 MIN_POOL_PREFIXLEN = 20  # ignore /8–/19 pools (false match risk)
 MAX_POOLS_STORE_PER_ASN = 96
@@ -165,6 +170,25 @@ TRANSLATIONS = {
         "startup_isp": "ISP: ",
         "startup_asn": "ASN: ",
         "startup_fetch_fail": "Could not detect public IP (offline or API error).",
+        "startup_tor_on": "Egress via Tor (SOCKS): ",
+        "startup_tor_off": "Egress: direct (menu 12 or --tor for anonymity)",
+        "startup_offline": "Mode: OFFLINE (local DB + intelligence cache)",
+        "startup_online_direct": "Mode: ONLINE, direct egress",
+        "offline_no_live": "Offline mode: no live lookup. Use cache or switch to online (restart FNkit).",
+        "offline_no_live_geo": "Offline mode: no cached geo for this IP.",
+        "tor_menu_enable": "Enable Tor routing (HTTP API calls)",
+        "tor_menu_disable": "Disable Tor routing (direct)",
+        "tor_menu_start": "Start local Tor daemon",
+        "tor_menu_stop": "Stop local Tor daemon",
+        "tor_menu_bridges_hint": "Show bridges file path + BridgeDB link",
+        "tor_menu_back": "Back to main menu",
+        "tor_menu_prompt": "Select (0-5): ",
+        "tor_menu_ok": "Tor routing active (check.torproject.org OK).",
+        "tor_menu_warn_not_tor": "SOCKS up but exit is not Tor — add obfs4 bridges.",
+        "tor_menu_fail_socks": "Could not enable SOCKS transport.",
+        "tor_menu_disabled": "Tor routing disabled.",
+        "tor_menu_bridges_path": "Bridges file: {path}",
+        "menu_body_tor": "Anonymous egress (Tor / bridges)",
         "abuse_contact": "Abuse / complaints: ",
         "abuse_not_found": "(not found in WHOIS — check RIR WHOIS for this prefix)",
         "abuse_whois_lookup": "Looking up abuse contact (WHOIS)...",
@@ -177,6 +201,7 @@ TRANSLATIONS = {
         "enrich_ip2location": "IP2Location",
         "enrich_unavailable": "unavailable",
         "enrich_need_api_key": "no data (API KEY required)",
+        "enrich_policy_line": "Policy ({prefer}): {cc}",
         "auth_check_title": "Authenticity check: ",
         "auth_check_ok": "no obvious conflict signals",
         "auth_check_warn_geo_whois": "geo country and WHOIS country differ",
@@ -225,8 +250,10 @@ TRANSLATIONS = {
         "tools_3": "3. nslookup  (this IP, system resolver)",
         "tools_4": "4. OWASP Secure Headers (quick, built-in)",
         "tools_5": "5. TLS check (cert, cipher, legacy protocols)",
+        "tools_6": "6. IP pivot map (HTML graph)",
         "tools_0": "0. Skip / back",
-        "tools_prompt": "Select (0-5): ",
+        "tools_prompt": "Select (0-6): ",
+        "pivot_depth_prompt": "Pivot depth 0=passive only, 1=+resolve hostnames, 2=two hops [1]: ",
         "tools_running": "Running: ",
         "tools_done": "— done —",
         "tools_cmd_missing": "Command not found in PATH: ",
@@ -243,8 +270,8 @@ TRANSLATIONS = {
         "menu_body_dns": "DNS analysis (graph / subdomains)",
         "menu_body_owasp": "OWASP toolkit (Amass / Nettacker / headers / WSTG)",
         "menu_body_exit": "Exit",
-        "menu_prompt_main": "Select option (0-11): ",
-        "menu_prompt_hint": "Enter the menu number (0–11) and press Enter.",
+        "menu_prompt_main": "Select option (0-12): ",
+        "menu_prompt_hint": "Enter the menu number (0–12) and press Enter.",
         "diag_menu_title": "Network diagnostics",
         "diag_opt_speed": "1. Quick speed test (ping + HTTP download/upload, Cloudflare)",
         "diag_opt_trace": "2. Multi-hop route latency monitor",
@@ -275,8 +302,13 @@ TRANSLATIONS = {
         "enrich_cfg_opt_1": "1. MaxMind",
         "enrich_cfg_opt_2": "2. IP2Location",
         "enrich_cfg_opt_3": "3. VirusTotal (passive DNS)",
+        "enrich_cfg_opt_4": "4. SecurityTrails (passive DNS)",
+        "enrich_cfg_opt_5": "5. Provider priority policies",
+        "enrich_cfg_opt_6": "6. Local intelligence cache",
         "enrich_cfg_opt_0": "0. Back",
-        "enrich_cfg_prompt": "Select (0-3): ",
+        "enrich_cfg_prompt": "Select (0-6): ",
+        "enrich_cfg_st_prompt": "Enter SecurityTrails API key (or 0 to go back): ",
+        "enrich_cfg_policies_hint": "Edit passive DNS / geo / country-conflict weights.",
         "enrich_cfg_vt_prompt": "Enter VirusTotal API key (or 0 to go back): ",
         "enrich_cfg_mm_prompt": "Enter MaxMind key as ACCOUNT_ID:LICENSE_KEY (or 0 to go back): ",
         "enrich_cfg_ip2_prompt": "Enter IP2Location API key (or 0 to go back): ",
@@ -378,6 +410,25 @@ TRANSLATIONS = {
         "startup_isp": "Провайдер: ",
         "startup_asn": "ASN: ",
         "startup_fetch_fail": "Не удалось определить публичный IP (сеть или ошибка API).",
+        "startup_tor_on": "Выход через Tor (SOCKS): ",
+        "startup_tor_off": "Выход: напрямую (п.12 или --tor)",
+        "startup_offline": "Режим: ОФФЛАЙН (локальная БД + intelligence cache)",
+        "startup_online_direct": "Режим: ОНЛАЙН, прямой egress",
+        "offline_no_live": "Оффлайн: живые запросы отключены. Кэш или перезапуск в онлайн.",
+        "offline_no_live_geo": "Оффлайн: нет geo в кэше для этого IP.",
+        "tor_menu_enable": "Включить маршрутизацию через Tor (HTTP API)",
+        "tor_menu_disable": "Отключить Tor (прямое соединение)",
+        "tor_menu_start": "Запустить локальный Tor",
+        "tor_menu_stop": "Остановить локальный Tor",
+        "tor_menu_bridges_hint": "Путь к мостам + BridgeDB",
+        "tor_menu_back": "Назад в главное меню",
+        "tor_menu_prompt": "Выберите (0-5): ",
+        "tor_menu_ok": "Tor активен (check.torproject.org).",
+        "tor_menu_warn_not_tor": "SOCKS есть, выход не через Tor — нужны obfs4-мосты.",
+        "tor_menu_fail_socks": "Не удалось включить SOCKS.",
+        "tor_menu_disabled": "Маршрутизация через Tor отключена.",
+        "tor_menu_bridges_path": "Файл мостов: {path}",
+        "menu_body_tor": "Анонимный egress (Tor / мосты)",
         "abuse_contact": "Abuse / жалобы: ",
         "abuse_not_found": "(не найдено в WHOIS — смотрите WHOIS RIR для этого префикса)",
         "abuse_whois_lookup": "Поиск abuse-контакта (WHOIS)...",
@@ -390,6 +441,7 @@ TRANSLATIONS = {
         "enrich_ip2location": "IP2Location",
         "enrich_unavailable": "недоступно",
         "enrich_need_api_key": "нет данных (нужен API KEY)",
+        "enrich_policy_line": "Политика ({prefer}): {cc}",
         "auth_check_title": "Проверка подлинности: ",
         "auth_check_ok": "явных конфликтов не обнаружено",
         "auth_check_warn_geo_whois": "страна geo и страна WHOIS отличаются",
@@ -438,8 +490,10 @@ TRANSLATIONS = {
         "tools_3": "3. nslookup  (этот IP, системный резолвер)",
         "tools_4": "4. OWASP Secure Headers (быстро, встроенно)",
         "tools_5": "5. Проверка TLS (сертификат, cipher, устаревшие протоколы)",
+        "tools_6": "6. IP pivot map (HTML-граф)",
         "tools_0": "0. Пропуск / назад",
-        "tools_prompt": "Выберите (0-5): ",
+        "tools_prompt": "Выберите (0-6): ",
+        "pivot_depth_prompt": "Глубина pivot: 0=только passive, 1=+resolve, 2=два хопа [1]: ",
         "tools_running": "Запуск: ",
         "tools_done": "— готово —",
         "tools_cmd_missing": "Команда не найдена в PATH: ",
@@ -456,8 +510,8 @@ TRANSLATIONS = {
         "menu_body_dns": "DNS-анализ (граф / поддомены)",
         "menu_body_owasp": "OWASP (Amass / Nettacker / headers / WSTG)",
         "menu_body_exit": "Выход",
-        "menu_prompt_main": "Выберите опцию (0-11): ",
-        "menu_prompt_hint": "Введите номер пункта меню (0–11) и нажмите Enter.",
+        "menu_prompt_main": "Выберите опцию (0-12): ",
+        "menu_prompt_hint": "Введите номер пункта меню (0–12) и нажмите Enter.",
         "diag_menu_title": "Диагностика сети",
         "diag_opt_speed": "1. Быстрый тест скорости (ping + HTTP загрузка/отдача, Cloudflare)",
         "diag_opt_trace": "2. Монитор задержки по хопам маршрута",
@@ -488,8 +542,13 @@ TRANSLATIONS = {
         "enrich_cfg_opt_1": "1. MaxMind",
         "enrich_cfg_opt_2": "2. IP2Location",
         "enrich_cfg_opt_3": "3. VirusTotal (passive DNS)",
+        "enrich_cfg_opt_4": "4. SecurityTrails (passive DNS)",
+        "enrich_cfg_opt_5": "5. Политики приоритета провайдеров",
+        "enrich_cfg_opt_6": "6. Локальный intelligence cache",
         "enrich_cfg_opt_0": "0. Назад",
-        "enrich_cfg_prompt": "Выберите (0-3): ",
+        "enrich_cfg_prompt": "Выберите (0-6): ",
+        "enrich_cfg_st_prompt": "Введите API ключ SecurityTrails (или 0 назад): ",
+        "enrich_cfg_policies_hint": "Passive DNS, geo и веса country-conflict.",
         "enrich_cfg_vt_prompt": "Введите API ключ VirusTotal (или 0 назад): ",
         "enrich_cfg_mm_prompt": "Введите ключ MaxMind в формате ACCOUNT_ID:LICENSE_KEY (или 0 назад): ",
         "enrich_cfg_ip2_prompt": "Введите API ключ IP2Location (или 0 назад): ",
@@ -513,11 +572,12 @@ MAIN_MENU_ITEM_KEYS = (
     "menu_body_help",
     "menu_body_dns",
     "menu_body_owasp",
+    "menu_body_tor",
 )
 
 
 def print_main_menu_lines() -> None:
-    """Print main menu: lines 1–11 match the digit you type; 0 exits."""
+    """Print main menu: lines 1–12 match the digit you type; 0 exits."""
     for i, body_key in enumerate(MAIN_MENU_ITEM_KEYS, start=1):
         print(f"{i}. {t(body_key)}")
     print(f"0. {t('menu_body_exit')}")
@@ -583,6 +643,9 @@ def configure_enrichment_keys_menu() -> None:
         print(f"{Colors.OKCYAN}{t('enrich_cfg_opt_1')}{Colors.ENDC}")
         print(f"{Colors.OKCYAN}{t('enrich_cfg_opt_2')}{Colors.ENDC}")
         print(f"{Colors.OKCYAN}{t('enrich_cfg_opt_3')}{Colors.ENDC}")
+        print(f"{Colors.OKCYAN}{t('enrich_cfg_opt_4')}{Colors.ENDC}")
+        print(f"{Colors.OKCYAN}{t('enrich_cfg_opt_5')}{Colors.ENDC}")
+        print(f"{Colors.OKCYAN}{t('enrich_cfg_opt_6')}{Colors.ENDC}")
         print(f"{Colors.OKCYAN}{t('enrich_cfg_opt_0')}{Colors.ENDC}")
         try:
             choice = input(f"{Colors.WARNING}{t('enrich_cfg_prompt')}{Colors.ENDC}").strip()
@@ -634,6 +697,35 @@ def configure_enrichment_keys_menu() -> None:
                 print(f"{Colors.OKGREEN}{t('enrich_cfg_saved')}{Colors.ENDC}")
             else:
                 print(f"{Colors.FAIL}{t('enrich_cfg_save_failed')}{Colors.ENDC}")
+        elif choice == "4":
+            key = input(f"{Colors.OKCYAN}{t('enrich_cfg_st_prompt')}{Colors.ENDC}").strip()
+            if key == "0":
+                continue
+            if not key:
+                print(f"{Colors.FAIL}{t('enrich_cfg_invalid')}{Colors.ENDC}")
+                continue
+            config["securitytrails_api_key"] = key
+            if save_enrichment_config(config):
+                print(f"{Colors.OKGREEN}{t('enrich_cfg_saved')}{Colors.ENDC}")
+            else:
+                print(f"{Colors.FAIL}{t('enrich_cfg_save_failed')}{Colors.ENDC}")
+        elif choice == "5":
+            lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+            print(f"{Colors.DIM}{t('enrich_cfg_policies_hint')}{Colors.ENDC}")
+            provider_policies.configure_policies_interactive(
+                lang=lang,
+                print_fn=print,
+                input_fn=lambda p: input(f"{Colors.OKCYAN}{p}{Colors.ENDC}"),
+            )
+            continue
+        elif choice == "6":
+            lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+            intel_cache.configure_intel_cache_interactive(
+                lang=lang,
+                print_fn=print,
+                input_fn=lambda p: input(f"{Colors.OKCYAN}{p}{Colors.ENDC}"),
+            )
+            continue
         else:
             print(f"{Colors.WARNING}{t('tools_invalid')}{Colors.ENDC}")
             continue
@@ -737,16 +829,10 @@ def infer_rir_from_whois_server(server: Optional[str]) -> Optional[str]:
 
 def infer_rir_priority_for_ip(ip: str) -> Dict:
     """
-    Best-effort prefix/RIR priority by address family.
-    IPv4 defaults to globally mixed trust. IPv6 relies more on RIR WHOIS.
+    Country-conflict source weights by address family.
+    Defaults are overridden by ``data/config/.provider_policies.json`` when present.
     """
-    try:
-        ip_obj = ipaddress.ip_address(ip)
-    except ValueError:
-        return {"preferred_source": "GEO_API", "weight_whois": 0.4, "weight_geo": 0.6}
-    if ip_obj.version == 6:
-        return {"preferred_source": "WHOIS", "weight_whois": 0.65, "weight_geo": 0.35}
-    return {"preferred_source": "GEO_API", "weight_whois": 0.4, "weight_geo": 0.6}
+    return provider_policies.country_conflict_weights_for_ip(ip)
 
 def default_whois_server_for_rir(rir: Optional[str]) -> Optional[str]:
     """Return canonical WHOIS hostname for known RIR labels."""
@@ -1170,8 +1256,8 @@ def maybe_prompt_database_update(database: Dict) -> None:
         except Exception as exc:
             print(f"{Colors.FAIL}{t('db_update_failed')}{str(exc)}{Colors.ENDC}")
 
-def get_ip_geolocation(ip: str) -> Optional[Dict]:
-    """Get geolocation data for an IP address using ip-api.com"""
+def _fetch_ip_geolocation_live(ip: str) -> Dict:
+    """Live ip-api.com lookup (no cache)."""
     try:
         url = (
             f"http://ip-api.com/json/{ip}"
@@ -1180,7 +1266,7 @@ def get_ip_geolocation(ip: str) -> Optional[Dict]:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
             data = json.loads(response.read().decode('utf-8'))
-            
+
             if data.get('status') == 'success':
                 return {
                     'ip': ip,
@@ -1197,16 +1283,29 @@ def get_ip_geolocation(ip: str) -> Optional[Dict]:
                     'reverse': (data.get('reverse') or '').strip() or None,
                     'success': True
                 }
-            else:
-                return {'ip': ip, 'error': data.get('query'), 'success': False}
+            return {'ip': ip, 'error': data.get('query'), 'success': False}
     except Exception as e:
         return {'ip': ip, 'error': str(e), 'success': False}
 
-def get_maxmind_enrichment(ip: str) -> Dict:
-    """
-    Optional MaxMind enrichment.
-    Requires env MAXMIND_DB_PATH pointing to GeoLite2-City/GeoLite2-Country MMDB.
-    """
+
+def get_ip_geolocation(ip: str) -> Optional[Dict]:
+    """Get geolocation data for an IP address using ip-api.com (local cache when enabled)."""
+    if runtime_mode.is_offline():
+        cached = intel_cache.get("geo", ip)
+        if cached:
+            return cached
+        return {"ip": ip, "error": t("offline_no_live_geo"), "success": False}
+    lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+    payload, _from_cache = intel_cache.fetch_or_cache(
+        "geo",
+        ip,
+        lambda: _fetch_ip_geolocation_live(ip),
+        lang=lang,
+        print_fn=lambda s: print(f"{Colors.DIM}{s}{Colors.ENDC}"),
+    )
+    return payload
+
+def _fetch_maxmind_enrichment_live(ip: str) -> Dict:
     cfg = load_enrichment_config()
     account_id = str(cfg.get("maxmind_account_id", "")).strip() or os.getenv("MAXMIND_ACCOUNT_ID", "").strip()
     license_key = str(cfg.get("maxmind_license_key", "")).strip() or os.getenv("MAXMIND_LICENSE_KEY", "").strip()
@@ -1223,6 +1322,32 @@ def get_maxmind_enrichment(ip: str) -> Dict:
             }
         except Exception as exc:
             return {"available": False, "reason": str(exc)}
+    return {}
+
+
+def get_maxmind_enrichment(ip: str) -> Dict:
+    """
+    Optional MaxMind enrichment.
+    Requires env MAXMIND_DB_PATH pointing to GeoLite2-City/GeoLite2-Country MMDB.
+    """
+    cfg = load_enrichment_config()
+    account_id = str(cfg.get("maxmind_account_id", "")).strip() or os.getenv("MAXMIND_ACCOUNT_ID", "").strip()
+    license_key = str(cfg.get("maxmind_license_key", "")).strip() or os.getenv("MAXMIND_LICENSE_KEY", "").strip()
+    if account_id and license_key:
+        if runtime_mode.is_offline():
+            cached = intel_cache.get("enrichment_maxmind", ip)
+            if cached:
+                return cached
+            return {"available": False, "reason": t("offline_no_live")}
+        lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+        payload, _ = intel_cache.fetch_or_cache(
+            "enrichment_maxmind",
+            ip,
+            lambda: _fetch_maxmind_enrichment_live(ip),
+            lang=lang,
+            print_fn=lambda s: print(f"{Colors.DIM}{s}{Colors.ENDC}"),
+        )
+        return payload
 
     db_path = os.getenv("MAXMIND_DB_PATH", "").strip()
     if not db_path:
@@ -1250,19 +1375,36 @@ def get_ip2location_enrichment(ip: str) -> Dict:
     cfg = load_enrichment_config()
     api_key = str(cfg.get("ip2location_api_key", "")).strip() or os.getenv("IP2LOCATION_API_KEY", "").strip()
     if api_key:
-        try:
-            url = f"https://api.ip2location.io/?key={api_key}&ip={ip}&format=json"
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=8) as response:
-                data = json.loads(response.read().decode("utf-8"))
-            return {
-                "available": True,
-                "country_code": normalize_country_code(data.get("country_code")),
-                "country": data.get("country_name"),
-                "city": data.get("city_name"),
-            }
-        except Exception as exc:
-            return {"available": False, "reason": str(exc)}
+        if runtime_mode.is_offline():
+            cached = intel_cache.get("enrichment_ip2location", ip)
+            if cached:
+                return cached
+            return {"available": False, "reason": t("offline_no_live")}
+
+        def _live() -> Dict:
+            try:
+                url = f"https://api.ip2location.io/?key={api_key}&ip={ip}&format=json"
+                req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=8) as response:
+                    data = json.loads(response.read().decode("utf-8"))
+                return {
+                    "available": True,
+                    "country_code": normalize_country_code(data.get("country_code")),
+                    "country": data.get("country_name"),
+                    "city": data.get("city_name"),
+                }
+            except Exception as exc:
+                return {"available": False, "reason": str(exc)}
+
+        lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+        payload, _ = intel_cache.fetch_or_cache(
+            "enrichment_ip2location",
+            ip,
+            _live,
+            lang=lang,
+            print_fn=lambda s: print(f"{Colors.DIM}{s}{Colors.ENDC}"),
+        )
+        return payload
 
     db_path = os.getenv("IP2LOCATION_DB_PATH", "").strip()
     if db_path:
@@ -1287,6 +1429,14 @@ def print_enrichment_comparison(ip: str, geo_data: Dict) -> None:
     ip2 = get_ip2location_enrichment(ip)
     primary_cc = normalize_country_code(geo_data.get("country_code"))
     primary_name = geo_data.get("country") or "N/A"
+    mm_cc = normalize_country_code(mm.get("country_code")) if mm.get("available") else None
+    ip2_cc = normalize_country_code(ip2.get("country_code")) if ip2.get("available") else None
+    sources = {c for c in (primary_cc, mm_cc, ip2_cc) if c}
+    policy_cc = None
+    if len(sources) > 1:
+        policy_cc = provider_policies.pick_geo_country(
+            ip_api=primary_cc, maxmind=mm_cc, ip2location=ip2_cc
+        )
     print(f"\n{Colors.HEADER}{'-' * 60}{Colors.ENDC}")
     print(f"{Colors.BOLD}{t('enrich_title')}{Colors.ENDC}")
     print(f"  {t('enrich_primary')}: {primary_cc or 'N/A'} ({primary_name})")
@@ -1298,9 +1448,14 @@ def print_enrichment_comparison(ip: str, geo_data: Dict) -> None:
         print(f"  {t('enrich_ip2location')}: {ip2.get('country_code') or 'N/A'} ({ip2.get('country') or 'N/A'})")
     else:
         print(f"  {t('enrich_ip2location')}: {t('enrich_need_api_key')}")
+    if policy_cc:
+        prefer = provider_policies.geo_conflict_prefer()
+        print(f"  {Colors.WARNING}{t('enrich_policy_line', prefer=prefer, cc=policy_cc)}{Colors.ENDC}")
 
 def get_own_public_egress_info() -> Optional[Dict]:
     """Public egress IP and brief geo for this machine (ip-api.com, no target IP in URL)."""
+    if runtime_mode.is_offline():
+        return None
     try:
         url = "http://ip-api.com/json/?fields=status,query,country,countryCode,city,isp,org,as"
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -1345,7 +1500,17 @@ def print_startup_connection_banner() -> None:
         if asn:
             print(f"{Colors.OKCYAN}{row(t('startup_asn') + asn)}{Colors.ENDC}")
     else:
-        print(f"{Colors.WARNING}{row(t('startup_fetch_fail'))}{Colors.ENDC}")
+        if runtime_mode.is_offline():
+            print(f"{Colors.OKCYAN}{row(t('startup_offline'))}{Colors.ENDC}")
+        else:
+            print(f"{Colors.WARNING}{row(t('startup_fetch_fail'))}{Colors.ENDC}")
+    if runtime_mode.is_offline():
+        pass
+    elif tor_transport.is_active():
+        host, port = tor_transport.socks_endpoint()
+        print(f"{Colors.OKGREEN}{row(t('startup_tor_on') + f'{host}:{port}')}{Colors.ENDC}")
+    elif runtime_mode.is_online():
+        print(f"{Colors.WARNING}{row(t('startup_online_direct'))}{Colors.ENDC}")
     print(f"{Colors.OKBLUE}{top}{Colors.ENDC}\n")
 
 _ABUSE_LINE_PATTERNS = [
@@ -1610,6 +1775,7 @@ def offer_network_tools_menu(target_ip: str) -> None:
         print(f"{Colors.OKCYAN}{t('tools_3')}{Colors.ENDC}")
         print(f"{Colors.OKCYAN}{t('tools_4')}{Colors.ENDC}")
         print(f"{Colors.OKCYAN}{t('tools_5')}{Colors.ENDC}")
+        print(f"{Colors.OKCYAN}{t('tools_6')}{Colors.ENDC}")
         print(f"{Colors.OKCYAN}{t('tools_0')}{Colors.ENDC}")
         try:
             choice = input(f"{Colors.WARNING}{t('tools_prompt')}{Colors.ENDC}").strip()
@@ -1653,6 +1819,13 @@ def offer_network_tools_menu(target_ip: str) -> None:
             owasp_toolkit.set_context(ip=target_ip)
             rep = owasp_toolkit.check_tls(target_ip, lang=lang)
             owasp_toolkit.print_tls_report(rep, lang=lang)
+        elif choice == "6":
+            try:
+                raw_d = input(f"{Colors.OKCYAN}{t('pivot_depth_prompt')}{Colors.ENDC}").strip() or "1"
+                depth = max(0, min(2, int(raw_d)))
+            except (ValueError, EOFError, KeyboardInterrupt):
+                depth = 1
+            run_pivot_map_for_ip(target_ip, depth=depth, save=True)
         else:
             print(f"{Colors.WARNING}{t('tools_invalid')}{Colors.ENDC}")
 
@@ -1718,8 +1891,8 @@ def _run_whois_raw_query(
         return {"error": str(exc)}
 
 
-def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[str] = None) -> Optional[Dict]:
-    """Get WHOIS data for an IP address"""
+def _get_whois_data_live(ip: str, timeout_seconds: int = 20, whois_server: Optional[str] = None) -> Optional[Dict]:
+    """Get WHOIS data for an IP address (no cache)."""
     try:
         raw = _run_whois_raw_query(ip, whois_server=whois_server, timeout_seconds=timeout_seconds)
         if raw.get("error"):
@@ -1800,6 +1973,30 @@ def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[st
         return {'error': str(exc)}
     except Exception as exc:
         return {'error': str(exc)}
+
+
+def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[str] = None) -> Optional[Dict]:
+    """Get WHOIS data for an IP address (local cache when enabled)."""
+    cache_key = f"{ip}|{whois_server or 'auto'}"
+    if runtime_mode.is_offline():
+        cached = intel_cache.get("whois", cache_key)
+        if cached:
+            return cached
+        return {"error": t("offline_no_live")}
+    lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+
+    def _live() -> Dict:
+        result = _get_whois_data_live(ip, timeout_seconds=timeout_seconds, whois_server=whois_server)
+        return result if isinstance(result, dict) else {"error": "empty whois response"}
+
+    payload, _ = intel_cache.fetch_or_cache(
+        "whois",
+        cache_key,
+        _live,
+        lang=lang,
+        print_fn=lambda s: print(f"{Colors.DIM}{s}{Colors.ENDC}"),
+    )
+    return payload
 
 
 def normalize_asn_key(raw: str) -> Optional[str]:
@@ -1928,8 +2125,7 @@ def collect_bgp_pools_for_asn(
     return ordered[:MAX_POOLS_STORE_PER_ASN]
 
 
-def bgp_lookup_ip(ip: str, timeout_seconds: int = 15) -> Dict:
-    """Live BGP origin for *ip* via Team Cymru (one ``whois`` subprocess)."""
+def _bgp_lookup_ip_live(ip: str, timeout_seconds: int = 15) -> Dict:
     try:
         ipaddress.ip_address(ip)
     except ValueError:
@@ -1948,6 +2144,24 @@ def bgp_lookup_ip(ip: str, timeout_seconds: int = 15) -> Dict:
         return {"success": False, "error": "no BGP origin in Team Cymru response"}
 
     return {"success": True, **parsed}
+
+
+def bgp_lookup_ip(ip: str, timeout_seconds: int = 15) -> Dict:
+    """Live BGP origin for *ip* via Team Cymru (local cache when enabled)."""
+    if runtime_mode.is_offline():
+        cached = intel_cache.get("bgp", ip)
+        if cached:
+            return cached
+        return {"success": False, "error": t("offline_no_live")}
+    lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+    payload, _ = intel_cache.fetch_or_cache(
+        "bgp",
+        ip,
+        lambda: _bgp_lookup_ip_live(ip, timeout_seconds=timeout_seconds),
+        lang=lang,
+        print_fn=lambda s: print(f"{Colors.DIM}{s}{Colors.ENDC}"),
+    )
+    return payload
 
 
 def print_bgp_origin_verification(
@@ -2496,6 +2710,26 @@ def get_pdns_api_keys() -> Dict[str, str]:
 
 def run_pdns_lookup_for_ip(ip: str) -> Dict:
     """Query and print passive DNS / routing history for an IP."""
+    if runtime_mode.is_offline():
+        cached = intel_cache.get("pdns", ip)
+        if cached:
+            lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+            age = intel_cache.format_entry_age("pdns", ip, lang=lang)
+            print(f"{Colors.DIM}{intel_cache.msg(lang, 'hit', kind='pdns', key=ip, age=age)}{Colors.ENDC}")
+            pdns_lookup.print_pdns_report(
+                cached,
+                lang=CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en",
+                colors={
+                    "bold": Colors.BOLD,
+                    "ok": Colors.OKGREEN,
+                    "warn": Colors.WARNING,
+                    "fail": Colors.FAIL,
+                    "end": Colors.ENDC,
+                },
+            )
+            return cached
+        print(f"{Colors.WARNING}{t('offline_no_live')}{Colors.ENDC}")
+        return {"success": False, "ip": ip, "error": t("offline_no_live")}
     print(f"{Colors.OKCYAN}{t('pdns_lookup_running')}{Colors.ENDC}")
     keys = get_pdns_api_keys()
     lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
@@ -2503,6 +2737,7 @@ def run_pdns_lookup_for_ip(ip: str) -> Dict:
         ip,
         virustotal_api_key=keys.get("virustotal"),
         securitytrails_api_key=keys.get("securitytrails"),
+        policies=provider_policies.load_policies(),
         lang=lang,
     )
     pdns_lookup.print_pdns_report(
@@ -2517,6 +2752,48 @@ def run_pdns_lookup_for_ip(ip: str) -> Dict:
         },
     )
     return report
+
+
+def run_pivot_map_for_ip(
+    ip: str,
+    *,
+    depth: int = 1,
+    pdns_report: Optional[Dict] = None,
+    geo_context: Optional[Dict] = None,
+    export: Optional[str] = None,
+    save: bool = False,
+) -> Dict:
+    """Build IP pivot graph (passive DNS → domains → peer IPs) and optional HTML/session."""
+    keys = get_pdns_api_keys()
+    lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+    session = ip_pivot_map.build_pivot_map(
+        ip,
+        depth=depth,
+        pdns_report=pdns_report,
+        geo_context=geo_context or {},
+        virustotal_api_key=keys.get("virustotal"),
+        securitytrails_api_key=keys.get("securitytrails"),
+        lang=lang,
+        print_fn=lambda s: print(f"{Colors.OKCYAN}{s}{Colors.ENDC}"),
+    )
+    if not session.get("success"):
+        print(f"{Colors.FAIL}{session.get('error', 'pivot failed')}{Colors.ENDC}")
+        return session
+    ip_pivot_map.print_pivot_summary(session, lang=lang)
+    if save:
+        spath = ip_pivot_map.save_pivot_session(session)
+        print(f"{Colors.OKGREEN}{ip_pivot_map.msg(lang, 'session_ok', path=spath)}{Colors.ENDC}")
+    if export:
+        html = ip_pivot_map.export_pivot_html(session, Path(export), lang=lang)
+        print(f"{Colors.OKGREEN}{ip_pivot_map.msg(lang, 'html_ok', path=html)}{Colors.ENDC}")
+    elif save:
+        from paths import PIVOT_GRAPH_DIR
+
+        html = ip_pivot_map.export_pivot_html(
+            session, PIVOT_GRAPH_DIR / f"pivot_{ip.replace('.', '_')}.html", lang=lang
+        )
+        print(f"{Colors.OKGREEN}{ip_pivot_map.msg(lang, 'html_ok', path=html)}{Colors.ENDC}")
+    return session
 
 
 def parse_cli_args():
@@ -2571,6 +2848,34 @@ def parse_cli_args():
         action="store_true",
         help="Skip Tor / proxy / datacenter egress checks.",
     )
+    tor_opts = parser.add_mutually_exclusive_group()
+    tor_opts.add_argument(
+        "--tor",
+        action="store_true",
+        help="Route FNkit HTTP(S) API lookups via Tor SOCKS5 (127.0.0.1:9050). "
+        "Starts local Tor if needed; use bridges file when censored.",
+    )
+    tor_opts.add_argument(
+        "--no-tor",
+        action="store_true",
+        help="Disable Tor transport even if enabled in data/config/.tor_transport.json.",
+    )
+    parser.add_argument(
+        "--tor-socks",
+        metavar="HOST:PORT",
+        default=None,
+        help="Tor SOCKS5 endpoint (default 127.0.0.1:9050 or saved config).",
+    )
+    parser.add_argument(
+        "--tor-start",
+        action="store_true",
+        help="Start local Tor via scripts/fnkit-tor.sh before checks.",
+    )
+    parser.add_argument(
+        "--tor-status",
+        action="store_true",
+        help="Print Tor/SOCKS status and exit.",
+    )
     parser.add_argument(
         "--ptr-scan",
         action="store_true",
@@ -2586,6 +2891,35 @@ def parse_cli_args():
         "--ptr-save",
         action="store_true",
         help="Save PTR sweep JSON to ptr_sessions/ (also use -s for scan_results).",
+    )
+    parser.add_argument(
+        "--pivot-map",
+        action="store_true",
+        help="After -i: build IP pivot HTML graph (uses passive DNS from check).",
+    )
+    parser.add_argument(
+        "--pivot-ip",
+        metavar="IP",
+        default=None,
+        help="Build IP pivot map for IP only (no full geo check).",
+    )
+    parser.add_argument(
+        "--pivot-depth",
+        type=int,
+        choices=(0, 1, 2),
+        default=1,
+        help="Pivot hops: 0=passive on seed, 1=+resolve hostnames, 2=+passive on linked IPs (default: 1).",
+    )
+    parser.add_argument(
+        "--pivot-export",
+        metavar="FILE",
+        default=None,
+        help="Write pivot HTML graph to this path.",
+    )
+    parser.add_argument(
+        "--pivot-save",
+        action="store_true",
+        help="Save pivot session JSON under data/sessions/pivot/.",
     )
     parser.add_argument(
         "--trace-monitor",
@@ -2762,6 +3096,38 @@ def parse_cli_args():
         "--maintain-db",
         action="store_true",
         help="Maintain asn_database.json (dedupe ASN, prune coarse pools, fix metadata) and exit.",
+    )
+    parser.add_argument(
+        "--show-provider-policies",
+        action="store_true",
+        help="Print provider priority policies (passive DNS, geo, country conflict) and exit.",
+    )
+    parser.add_argument(
+        "--no-intel-cache",
+        action="store_true",
+        help="Disable local intelligence cache for this run (always fetch live).",
+    )
+    parser.add_argument(
+        "--intel-cache-refresh",
+        action="store_true",
+        help="Ignore cache hits; refresh geo/WHOIS/BGP/pDNS entries on this run.",
+    )
+    parser.add_argument(
+        "--intel-cache-verbose",
+        action="store_true",
+        help="Print a line when a lookup is served from local intelligence cache.",
+    )
+    parser.add_argument(
+        "--intel-cache-stats",
+        action="store_true",
+        help="Print local intelligence cache statistics and exit.",
+    )
+    parser.add_argument(
+        "--clear-intel-cache",
+        nargs="?",
+        const="all",
+        metavar="KIND",
+        help="Clear cache (all or one kind: geo, whois, bgp, pdns, enrichment_maxmind, enrichment_ip2location).",
     )
     parser.add_argument(
         "--validate-db",
@@ -3747,6 +4113,61 @@ def _diagnostics_select_pcap_file() -> Optional[Path]:
     return Path(raw).expanduser()
 
 
+def tor_anonymous_menu() -> None:
+    """Tor / SOCKS egress — enable routing, local daemon, bridges."""
+    from paths import TOR_BRIDGES_FILE
+
+    lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+    while True:
+        print(f"\n{Colors.HEADER}{'=' * 60}{Colors.ENDC}")
+        print(f"{Colors.BOLD}Tor / anonymous egress{Colors.ENDC}\n")
+        print(tor_transport.status_report(lang=lang))
+        print()
+        print(f"1. {t('tor_menu_enable')}")
+        print(f"2. {t('tor_menu_disable')}")
+        print(f"3. {t('tor_menu_start')}")
+        print(f"4. {t('tor_menu_stop')}")
+        print(f"5. {t('tor_menu_bridges_hint')}")
+        print(f"0. {t('tor_menu_back')}")
+        try:
+            choice = input(f"\n{Colors.WARNING}{t('tor_menu_prompt')}{Colors.ENDC}").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return
+        if choice == "0":
+            return
+        if choice == "1":
+            ok, msg = tor_transport.ensure_tor_daemon(use_bridges=True)
+            if not ok:
+                print(f"{Colors.FAIL}{msg}{Colors.ENDC}")
+                continue
+            host, port = tor_transport.socks_endpoint()
+            if tor_transport.activate(socks_host=host, socks_port=port):
+                v = tor_transport.verify_tor_circuit()
+                if v.get("is_tor"):
+                    print(f"{Colors.OKGREEN}{t('tor_menu_ok')}{Colors.ENDC}")
+                else:
+                    print(f"{Colors.WARNING}{t('tor_menu_warn_not_tor')}{Colors.ENDC}")
+            else:
+                print(f"{Colors.FAIL}{t('tor_menu_fail_socks')}{Colors.ENDC}")
+        elif choice == "2":
+            tor_transport.deactivate(persist=True)
+            print(f"{Colors.OKGREEN}{t('tor_menu_disabled')}{Colors.ENDC}")
+        elif choice == "3":
+            action = "start-bridges" if TOR_BRIDGES_FILE.is_file() else "start"
+            code, out = tor_transport.run_tor_script(action)
+            print(out or f"exit {code}")
+        elif choice == "4":
+            code, out = tor_transport.run_tor_script("stop")
+            tor_transport.deactivate(persist=False)
+            print(out or f"exit {code}")
+        elif choice == "5":
+            print(f"{Colors.OKCYAN}{t('tor_menu_bridges_path').format(path=TOR_BRIDGES_FILE)}{Colors.ENDC}")
+            print(f"{Colors.OKCYAN}https://bridges.torproject.org/{Colors.ENDC}")
+        else:
+            print(f"{Colors.WARNING}{t('tools_invalid')}{Colors.ENDC}")
+
+
 def network_diagnostics_menu() -> None:
     """Interactive entry: speed test, trace monitor, replay, PCAP tools."""
     if not (sys.stdin.isatty() and sys.stdout.isatty()):
@@ -3933,6 +4354,20 @@ def run_cli_mode(args):
             if save_results(results):
                 print(f"{Colors.OKGREEN}✓ Results saved: {RESULTS_FILE}{Colors.ENDC}")
 
+    if getattr(args, "pivot_map", False) and args.ip and results:
+        row = results[0] if results else {}
+        run_pivot_map_for_ip(
+            args.ip,
+            depth=int(getattr(args, "pivot_depth", 1)),
+            pdns_report=row.get("passive_dns"),
+            geo_context=row.get("geo_data") or row,
+            export=getattr(args, "pivot_export", None),
+            save=bool(
+                getattr(args, "pivot_save", False)
+                or getattr(args, "pivot_export", None)
+            ),
+        )
+
 def _run_check_deps_cli(args) -> None:
     """Delegate to scripts/check_deps.py (same repo, no extra pip package)."""
     script = REPO_ROOT / "scripts" / "check_deps.py"
@@ -3945,9 +4380,33 @@ def _run_check_deps_cli(args) -> None:
     raise SystemExit(subprocess.run(cmd, check=False).returncode)
 
 
+def _prompt_runtime_profile_on_exit() -> None:
+    """Ask to keep or delete connection profile when leaving interactive main menu."""
+    if not (sys.stdin.isatty() and sys.stdout.isatty()):
+        return
+    lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+    runtime_mode.prompt_exit_profile_disposition(
+        lang=lang,
+        print_fn=print,
+        input_fn=lambda p: input(f"{Colors.WARNING}{p}{Colors.ENDC}"),
+        colors={
+            "ok": Colors.OKGREEN,
+            "warn": Colors.WARNING,
+            "end": Colors.ENDC,
+        },
+    )
+
+
 def main():
     global CURRENT_LANGUAGE
     args = parse_cli_args()
+
+    if getattr(args, "tor_status", False):
+        load_language_config()
+        if CURRENT_LANGUAGE is None:
+            CURRENT_LANGUAGE = "en"
+        tor_transport.init_from_cli(args)
+        return
 
     if getattr(args, "check_deps", False):
         _run_check_deps_cli(args)
@@ -3976,6 +4435,32 @@ def main():
         )
         sys.exit(0 if report.get("ok") else 1)
 
+    if getattr(args, "show_provider_policies", False):
+        print(provider_policies.format_policies_summary(provider_policies.load_policies()))
+        return
+
+    if getattr(args, "intel_cache_stats", False):
+        lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+        print(intel_cache.format_stats(lang))
+        return
+
+    clear_kind = getattr(args, "clear_intel_cache", None)
+    if clear_kind is not None:
+        kind = None if clear_kind == "all" else clear_kind
+        if kind and kind not in intel_cache.CACHE_KINDS:
+            print(f"Unknown cache kind: {kind}. Use: {', '.join(intel_cache.CACHE_KINDS)}")
+            sys.exit(1)
+        n = intel_cache.clear(kind)
+        lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
+        print(intel_cache.msg(lang, "cleared", n=n))
+        return
+
+    intel_cache.set_runtime_options(
+        disabled=bool(getattr(args, "no_intel_cache", False)),
+        force_refresh=bool(getattr(args, "intel_cache_refresh", False)),
+        verbose_hits=bool(getattr(args, "intel_cache_verbose", False)),
+    )
+
     # Load saved language
     load_language_config()
     dns_requested = bool(
@@ -4002,10 +4487,48 @@ def main():
     )
 
     # First-time language: skip interactive prompt for standalone network CLI
-    if CURRENT_LANGUAGE is None and not diag_requested and not dns_requested and not owasp_requested:
+    cli_only = bool(
+        args.ip
+        or args.ip_range
+        or args.asn
+        or diag_requested
+        or dns_requested
+        or owasp_requested
+        or getattr(args, "pivot_ip", None)
+        or getattr(args, "ptr_scan", False)
+        or getattr(args, "maintain_db", False)
+    )
+    if CURRENT_LANGUAGE is None and not cli_only:
         select_language_menu()
     elif CURRENT_LANGUAGE is None:
         CURRENT_LANGUAGE = "en"
+
+    _color_map = {
+        "ok": Colors.OKGREEN,
+        "warn": Colors.WARNING,
+        "fail": Colors.FAIL,
+        "end": Colors.ENDC,
+    }
+    if sys.stdin.isatty() and sys.stdout.isatty() and not cli_only:
+        if runtime_mode.needs_onboarding():
+            runtime_mode.run_onboarding_interactive(
+                lang=CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en",
+                print_fn=print,
+                input_fn=lambda p: input(f"{Colors.OKCYAN}{p}{Colors.ENDC}"),
+                colors=_color_map,
+            )
+        else:
+            runtime_mode.apply_at_startup(colors=_color_map)
+    else:
+        runtime_mode.sync_offline_flag_from_disk()
+        if not cli_only:
+            runtime_mode.apply_at_startup(colors=_color_map)
+
+    tor_err = tor_transport.init_from_cli(args)
+    if tor_err:
+        print(f"{Colors.FAIL}{tor_err}{Colors.ENDC}", file=sys.stderr)
+        if getattr(args, "tor", False):
+            sys.exit(1)
 
     print_startup_connection_banner()
 
@@ -4020,6 +4543,17 @@ def main():
             max_ips=args.max_ips,
             qps=float(getattr(args, "ptr_qps", 10.0) or 10.0),
             save=bool(getattr(args, "save", False) or getattr(args, "ptr_save", False)),
+        )
+        return
+
+    if getattr(args, "pivot_ip", None) and not (args.ip or args.ip_range or args.asn):
+        if CURRENT_LANGUAGE is None:
+            CURRENT_LANGUAGE = "en"
+        run_pivot_map_for_ip(
+            args.pivot_ip,
+            depth=int(getattr(args, "pivot_depth", 1)),
+            export=getattr(args, "pivot_export", None),
+            save=bool(getattr(args, "pivot_save", False) or getattr(args, "pivot_export", None)),
         )
         return
 
@@ -4057,12 +4591,19 @@ def main():
         try:
             choice = input(f"{Colors.WARNING}{prompt_text}{Colors.ENDC}").strip()
         except KeyboardInterrupt:
-            print(f"\n{Colors.OKGREEN}Goodbye!{Colors.ENDC}\n")
+            print()
+            _prompt_runtime_profile_on_exit()
+            if CURRENT_LANGUAGE == "ru":
+                print(f"{Colors.OKGREEN}До свидания!{Colors.ENDC}\n")
+            else:
+                print(f"{Colors.OKGREEN}Goodbye!{Colors.ENDC}\n")
             break
         except EOFError:
+            _prompt_runtime_profile_on_exit()
             break
-        
+
         if choice == "0":
+            _prompt_runtime_profile_on_exit()
             if CURRENT_LANGUAGE == "ru":
                 print(f"{Colors.OKGREEN}До свидания!{Colors.ENDC}\n")
             else:
@@ -4213,6 +4754,9 @@ def main():
         elif choice == "11":
             lang = CURRENT_LANGUAGE if CURRENT_LANGUAGE in ("en", "ru") else "en"
             owasp_toolkit.run_owasp_menu(lang)
+
+        elif choice == "12":
+            tor_anonymous_menu()
 
         else:
             if CURRENT_LANGUAGE == "ru":

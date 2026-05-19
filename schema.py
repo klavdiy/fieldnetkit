@@ -24,6 +24,7 @@ FORMAT_TRACE_V1 = "fnkit_trace_v1"
 FORMAT_DNS_V1 = "fnkit_dns_v1"
 FORMAT_OWASP_V1 = "fnkit_owasp_v1"
 FORMAT_PTR_V1 = "fnkit_ptr_v1"
+FORMAT_PIVOT_V1 = "fnkit_pivot_v1"
 
 LEGACY_FORMAT_TRACE_V1 = "ip_checker_trace_v1"
 LEGACY_FORMAT_DNS_V1 = "ip_checker_dns_v1"
@@ -36,6 +37,7 @@ CURRENT_SCHEMA: Dict[str, str] = {
     "dns_session": FORMAT_DNS_V1,
     "owasp_session": FORMAT_OWASP_V1,
     "ptr_session": FORMAT_PTR_V1,
+    "pivot_session": FORMAT_PIVOT_V1,
 }
 
 SESSION_FORMAT_ALIASES: Dict[str, str] = {
@@ -49,6 +51,7 @@ ACCEPTABLE_SESSION_FORMATS: Dict[str, Tuple[str, ...]] = {
     "dns_session": (FORMAT_DNS_V1, LEGACY_FORMAT_DNS_V1),
     "owasp_session": (FORMAT_OWASP_V1, LEGACY_FORMAT_OWASP_V1),
     "ptr_session": (FORMAT_PTR_V1,),
+    "pivot_session": (FORMAT_PIVOT_V1,),
 }
 
 
@@ -59,6 +62,7 @@ class DocumentKind:
     DNS_SESSION = "dns_session"
     OWASP_SESSION = "owasp_session"
     PTR_SESSION = "ptr_session"
+    PIVOT_SESSION = "pivot_session"
 
 
 MigrationFn = Callable[[Dict[str, Any]], Dict[str, Any]]
@@ -330,6 +334,7 @@ def run_startup_migrations() -> List[str]:
         DATABASE_FILE,
         DNS_SESSIONS_DIR,
         OWASP_SESSIONS_DIR,
+        PIVOT_SESSIONS_DIR,
         PTR_SESSIONS_DIR,
         RESULTS_FILE,
         TRACE_SESSIONS_DIR,
@@ -371,6 +376,7 @@ def run_startup_migrations() -> List[str]:
         (DNS_SESSIONS_DIR, DocumentKind.DNS_SESSION),
         (OWASP_SESSIONS_DIR, DocumentKind.OWASP_SESSION),
         (PTR_SESSIONS_DIR, DocumentKind.PTR_SESSION),
+        (PIVOT_SESSIONS_DIR, DocumentKind.PIVOT_SESSION),
     ):
         if not directory.is_dir():
             continue

@@ -8,9 +8,16 @@ lib/__pycache__/
 data/cache/
 data/config/.language_config
 data/config/.enrichment_config.json
+data/config/.provider_policies.json
+data/config/.intel_cache.json
+data/config/.runtime_mode.json
+data/config/.tor_transport.json
+data/config/tor_bridges.txt
+data/cache/tor_daemon/
 data/scan_results.json
 data/sessions/
 data/dns_graph/
+data/pivot_graph/
 data/pcap/
 
 # Legacy root paths (migrated to data/ on first run)

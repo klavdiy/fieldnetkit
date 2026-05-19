@@ -1,0 +1,28 @@
+{
+  "passive_dns": {
+    "order": ["ripe", "virustotal", "securitytrails"],
+    "enabled": {
+      "ripe": true,
+      "virustotal": true,
+      "securitytrails": true
+    },
+    "merge_prefer": "virustotal"
+  },
+  "geo": {
+    "primary": "ip_api",
+    "order": ["ip_api", "maxmind", "ip2location"],
+    "conflict_prefer": "maxmind"
+  },
+  "country_conflict": {
+    "ipv4": {
+      "preferred_source": "GEO_API",
+      "weight_geo": 0.6,
+      "weight_whois": 0.4
+    },
+    "ipv6": {
+      "preferred_source": "WHOIS",
+      "weight_geo": 0.35,
+      "weight_whois": 0.65
+    }
+  }
+}

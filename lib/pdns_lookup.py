@@ -19,6 +19,16 @@ import urllib.request
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Set
 
+try:
+    import provider_policies as _policies
+except ImportError:
+    _policies = None  # type: ignore
+
+try:
+    import intel_cache as _intel_cache
+except ImportError:
+    _intel_cache = None  # type: ignore
+
 RIPESTAT_BASE = "https://stat.ripe.net/data"
 VT_API = "https://www.virustotal.com/api/v3"
 ST_API = "https://api.securitytrails.com/v1"
@@ -245,8 +255,16 @@ def securitytrails_ip_history(
     return {"ok": True, "source": "securitytrails", "resolutions": out}
 
 
-def _merge_resolutions(parts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _merge_resolutions(
+    parts: List[Dict[str, Any]],
+    *,
+    policies: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
     by_host: Dict[str, Dict[str, Any]] = {}
+    merge_rank = None
+    if _policies is not None:
+        merge_rank = lambda src: _policies.passive_dns_merge_rank(src, policies)  # noqa: E731
+
     for block in parts:
         for row in block.get("resolutions") or []:
             host = (row.get("hostname") or "").lower()
@@ -261,7 +279,12 @@ def _merge_resolutions(parts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             if row.get("last_seen") and (not prev.get("last_seen") or row["last_seen"] > prev["last_seen"]):
                 prev["last_seen"] = row["last_seen"]
     merged = list(by_host.values())
-    merged.sort(key=lambda r: (r.get("last_seen") or "", r.get("hostname") or ""), reverse=True)
+
+    if merge_rank:
+        merged.sort(key=lambda r: (r.get("last_seen") or "", r.get("hostname") or ""), reverse=True)
+        merged.sort(key=lambda r: merge_rank(r.get("source")))
+    else:
+        merged.sort(key=lambda r: (r.get("last_seen") or "", r.get("hostname") or ""), reverse=True)
     return merged
 
 
@@ -291,41 +314,55 @@ def analyze_rotation_signals(report: Dict[str, Any], *, lang: str = "en") -> Lis
     return signals
 
 
-def lookup_passive_dns(
+def _lookup_passive_dns_live(
     ip: str,
     *,
     virustotal_api_key: Optional[str] = None,
     securitytrails_api_key: Optional[str] = None,
     include_ripe: bool = True,
+    policies: Optional[Dict[str, Any]] = None,
     timeout: float = 15.0,
     lang: str = "en",
 ) -> Dict[str, Any]:
-    """Aggregate passive DNS / routing history for an IP."""
-    try:
-        ipaddress.ip_address(ip)
-    except ValueError:
-        return {"success": False, "ip": ip, "error": "invalid IP"}
+    pol = policies
+    if pol is None and _policies is not None:
+        pol = _policies.load_policies()
+
+    def pdns_enabled(pid: str) -> bool:
+        if _policies is None or pol is None:
+            return True
+        return _policies.passive_dns_enabled(pid, pol)
 
     sources: Dict[str, Any] = {}
     resolution_parts: List[Dict[str, Any]] = []
 
-    if include_ripe:
+    ripe_on = include_ripe and pdns_enabled("ripe")
+    if ripe_on:
         sources["ripe_dns_chain"] = ripestat_dns_chain(ip, timeout=timeout)
         sources["ripe_routing_history"] = ripestat_routing_history(ip, timeout=max(timeout, 18.0))
+    else:
+        sources["ripe_dns_chain"] = {"ok": False, "skipped": True, "reason": "disabled_by_policy", "source": "ripestat-dns-chain"}
+        sources["ripe_routing_history"] = {"ok": False, "skipped": True, "reason": "disabled_by_policy", "source": "ripestat-routing-history"}
 
     vt_key = (virustotal_api_key or os.getenv("VIRUSTOTAL_API_KEY") or "").strip()
-    vt = virustotal_resolutions(ip, vt_key, timeout=timeout)
+    if pdns_enabled("virustotal"):
+        vt = virustotal_resolutions(ip, vt_key, timeout=timeout)
+    else:
+        vt = {"ok": False, "skipped": True, "reason": "disabled_by_policy", "source": "virustotal"}
     sources["virustotal"] = vt
     if vt.get("ok"):
         resolution_parts.append(vt)
 
     st_key = (securitytrails_api_key or os.getenv("SECURITYTRAILS_API_KEY") or "").strip()
-    st = securitytrails_ip_history(ip, st_key, timeout=timeout)
+    if pdns_enabled("securitytrails"):
+        st = securitytrails_ip_history(ip, st_key, timeout=timeout)
+    else:
+        st = {"ok": False, "skipped": True, "reason": "disabled_by_policy", "source": "securitytrails"}
     sources["securitytrails"] = st
     if st.get("ok") and st.get("resolutions"):
         resolution_parts.append(st)
 
-    merged = _merge_resolutions(resolution_parts)
+    merged = _merge_resolutions(resolution_parts, policies=pol)
     rh = sources.get("ripe_routing_history") or {}
     routing_rows = rh.get("routing_origins") or []
     unique_asns = rh.get("unique_origin_asns") or sorted({r.get("asn") for r in routing_rows if r.get("asn")})
@@ -333,6 +370,7 @@ def lookup_passive_dns(
     report: Dict[str, Any] = {
         "success": True,
         "ip": ip,
+        "provider_policies": pol,
         "sources": sources,
         "resolutions": merged,
         "routing_origins": routing_rows,
@@ -342,6 +380,47 @@ def lookup_passive_dns(
     }
     report["rotation_signals"] = analyze_rotation_signals(report, lang=lang if lang in STRINGS else "en")
     return report
+
+
+def lookup_passive_dns(
+    ip: str,
+    *,
+    virustotal_api_key: Optional[str] = None,
+    securitytrails_api_key: Optional[str] = None,
+    include_ripe: bool = True,
+    policies: Optional[Dict[str, Any]] = None,
+    timeout: float = 15.0,
+    lang: str = "en",
+) -> Dict[str, Any]:
+    """Aggregate passive DNS / routing history for an IP (local cache when enabled)."""
+    try:
+        ipaddress.ip_address(ip)
+    except ValueError:
+        return {"success": False, "ip": ip, "error": "invalid IP"}
+
+    pol = policies
+    if pol is None and _policies is not None:
+        pol = _policies.load_policies()
+    cache_key = ip
+    if pol and _policies is not None:
+        enabled = (pol.get("passive_dns") or {}).get("enabled") or {}
+        cache_key = f"{ip}|{'+'.join(sorted(k for k, on in enabled.items() if on))}"
+
+    def _live() -> Dict[str, Any]:
+        return _lookup_passive_dns_live(
+            ip,
+            virustotal_api_key=virustotal_api_key,
+            securitytrails_api_key=securitytrails_api_key,
+            include_ripe=include_ripe,
+            policies=pol,
+            timeout=timeout,
+            lang=lang,
+        )
+
+    if _intel_cache is not None:
+        payload, _ = _intel_cache.fetch_or_cache("pdns", cache_key, _live, lang=lang)
+        return payload
+    return _live()
 
 
 def print_pdns_report(

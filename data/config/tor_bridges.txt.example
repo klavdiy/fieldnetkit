@@ -1,0 +1,6 @@
+# Copy to data/config/tor_bridges.txt (not committed).
+# Request obfs4 bridges: https://bridges.torproject.org/
+# One Bridge line per row (or bare obfs4 line — script normalizes).
+#
+# Example (replace with your bridges):
+# Bridge obfs4 192.0.2.1:443 ABCD1234 cert=... iat-mode=0

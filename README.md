@@ -15,32 +15,6 @@ python3 fnkit.py -i 8.8.8.8 -s      # CLI + отчёт в data/scan_results.json
 
 ---
 
-## Когда FNkit реально выручает
-
-| Ситуация | Без FNkit | С FNkit |
-|----------|-----------|---------|
-| **SOC: страна «не та»** | Спор ip-api vs CMDB, ручной whois | Mismatch + карантин: whois ≠ geo → **без ложной записи в БД**; BGP origin vs ваша база |
-| **Инцидент: новый IP в логах** | «Это наш VPS или взлом?» | Egress: Tor/proxy/hosting + passive DNS: **кто ещё сидел на этом IP** |
-| **AppSec: поддомен после утечки DNS** | Отдельно Amass, headers, чеклисты takeover | Pipeline: headers → TLS → Amass → **висящий CNAME** (~50 отпечатков) |
-| **SRE: «стало медленно»** | speedtest в браузере, trace в другом окне | Меню **4**: speed-test + **trace в стиле MTR** → JSON → replay позже |
-| **Форензика: pcap на ноутбуке** | Wireshark + ручной DNS | PCAP → DNS crawl → **HTML-граф** в `data/dns_graph/` |
-
-<details>
-<summary><strong>Пример: mismatch, который испортил бы вашу ASN-базу</strong></summary>
-
-```text
-Checking IP: 195.20.1.1
-✗ MISMATCH: Expected RU | Actual DE
-BGP origin: AS12389 — matches DB ASN, geo does not
-⚠ Conflict quarantined: WHOIS and ip-api disagree. No DB write performed.
-```
-
-Вы продолжаете расследование, а не помечаете весь AS как «Германия» автоматически.
-
-</details>
-
----
-
 ## Архитектура
 
 ```mermaid
@@ -268,15 +242,20 @@ fieldnetkit/
 ├── data/                    # Базы и артефакты рантайма (см. paths.py)
 │   ├── asn_database.json    # ASN / пулы / expected country
 │   ├── scan_results.json    # при -s/--save (gitignore)
-│   ├── config/              # .language_config, .enrichment_config.json (gitignore)
+│   ├── config/              # .language_config, .enrichment_config.json, .provider_policies.json (gitignore)
+│   │                        # provider_policies.example.json — шаблон политик
 │   ├── sessions/
 │   │   ├── trace/           # trace monitor JSON (gitignore)
 │   │   ├── dns/             # DNS crawl JSON (gitignore)
 │   │   ├── owasp/           # OWASP pipeline JSON (gitignore)
-│   │   └── ptr/             # PTR sweep JSON (gitignore)
+│   │   ├── ptr/             # PTR sweep JSON (gitignore)
+│   │   └── pivot/           # IP pivot map JSON (gitignore)
 │   ├── dns_graph/           # HTML DNS (gitignore)
+│   ├── pivot_graph/         # HTML IP pivot map (gitignore)
 │   ├── pcap/                # PCAP captures (gitignore)
-│   └── cache/tor/           # Tor exit list cache (gitignore)
+│   └── cache/
+│       ├── tor/             # Tor exit list (gitignore)
+│       └── intel/           # Local intelligence cache — geo/WHOIS/BGP/pDNS (gitignore)
 ├── scripts/                 # check_deps, validate_asn_db, install-deps
 ├── tools/                   # generate_sbom.py
 ├── docs/                    # SCHEMA, SBOM, OWASP (мануал — README.md)
@@ -354,10 +333,50 @@ pip install -r requirements-dns.txt -r requirements-optional.txt
 |--------|----------|
 | `proxy` / `hosting` / `mobile` | ip-api (в том же запросе, что и geo) |
 | Tor exit | [check.torproject.org](https://check.torproject.org/torbulkexitlist) (кэш в `data/cache/tor/`, ~6 ч) |
+| Local intelligence cache | повторные geo / WHOIS / BGP / pDNS → `data/cache/intel/` (TTL в `.intel_cache.json`) |
 | `bogon` | ipinfo.io (опционально `IPINFO_TOKEN`) |
 | ISP vs datacenter ASN | эвристика по имени org/ISP/AS |
 
 Полезно для: VPN/CDN, shared hosting, компрометаций, ошибок CMDB, abuse-эскалации.
+
+### Стартовый мастер (после выбора языка)
+
+При первом интерактивном запуске (`python3 fnkit.py`):
+
+1. **Язык** — English / Русский  
+2. **Режим** — **Онлайн** (живые API: ip-api, RIPE, WHOIS, passive DNS) или **Оффлайн** (только `asn_database.json` + [intelligence cache](#local-intelligence-cache-пункт-6), без сетевых запросов)  
+3. Если **онлайн** — опционально **Tor**:
+   - нужны ли **obfs4-мосты** (если Tor блокируют);
+   - **страна выхода** (необязательно): `de`, `de,us`, `{de},{us}` или пусто = любая;
+   - при отказе от Tor — сразу **главное меню** (прямой egress; Tor позже в п. **12**).
+
+Если **оффлайн** — шаг Tor **пропускается**, сразу главное меню.
+
+Профиль сохраняется в `data/config/.runtime_mode.json` (не коммитить).
+
+При выходе из главного меню (**0** или Ctrl+C) FNkit спрашивает: **сохранить профиль на следующий запуск?**
+
+| Ответ | Действие |
+|-------|----------|
+| **y** | Файл остаётся — при следующем запуске мастер не повторяется |
+| **n** | Файл удаляется — при следующем запуске снова язык → режим → Tor |
+
+Перед выбором показывается предупреждение, что без сохранения настройку придётся пройти заново.
+
+### Анонимный egress (свои запросы через Tor)
+
+Чтобы **не светить домашний IP** при обращении FNkit к ip-api, RIPE Stat, crt.sh и т.п. (в духе [backbox-anonymous](https://github.com/raffaele-forte/backbox-anonymous), но без iptables и root):
+
+| Шаг | Действие |
+|-----|----------|
+| 1 | Установить Tor: `brew install tor` / `apt install tor`; при блокировках — `obfs4proxy` |
+| 2 | При цензуре: скопировать `data/config/tor_bridges.txt.example` → `tor_bridges.txt`, вставить строки `Bridge obfs4 …` с [bridges.torproject.org](https://bridges.torproject.org/) |
+| 3 | `./scripts/fnkit-tor.sh start` или `start-bridges` |
+| 4 | Включить маршрутизацию: меню **`12`**, или `python3 fnkit.py --tor`, или `FNKIT_TOR=1 ./fnkit.sh -i …` |
+
+Проверка: `python3 fnkit.py --tor-status`. На старте в рамке: «Egress via Tor» или «direct».
+
+**Ограничения:** через Tor идут только HTTP(S) вызовы Python (`urllib`); subprocess-инструменты (nmap, traceroute, Amass) — по-прежнему с вашего интерфейса. WHOIS/RDAP к RIR — отдельно; при необходимости используйте системный Tor или `torsocks`.
 
 ### Как пользоваться (интерактивно)
 
@@ -800,15 +819,60 @@ Database update check is required - last check was 45 days ago. Update now? (y/n
 
 ### Назначение
 
-Сравнение гео **ip-api** (primary) с **MaxMind** и **IP2Location** при наличии ключей. Дополнительно: **VirusTotal API key** (пункт **3**) для passive DNS hostname history. Ключи в `data/config/.enrichment_config.json` (не коммитить); для VT также `VIRUSTOTAL_API_KEY` в окружении.
+Сравнение гео **ip-api** (primary) с **MaxMind** и **IP2Location** при наличии ключей. Ключи API — в `data/config/.enrichment_config.json` (не коммитить). **Политики приоритета** — в `data/config/.provider_policies.json` (шаблон: `data/config/provider_policies.example.json`).
 
 ### Подменю
 
-| № | Провайдер | Формат ключа |
-|---|-----------|--------------|
+| № | Действие | Описание |
+|---|----------|----------|
 | 1 | MaxMind | `ACCOUNT_ID:LICENSE_KEY` |
 | 2 | IP2Location | API key |
+| 3 | VirusTotal | passive DNS hostname history |
+| 4 | SecurityTrails | история A на IP |
+| 5 | **Provider priority policies** | порядок/вкл passive DNS, geo при конфликте, веса country-conflict |
+| 6 | **Local intelligence cache** | статистика, очистка, вкл/выкл, показ cache hit |
 | 0 | Назад | |
+
+### Provider priority policies (пункт 5)
+
+| Блок | Что настраивается |
+|------|-------------------|
+| **passive_dns** | `order` — порядок провайдеров; `enabled` — вкл/выкл `ripe`, `virustotal`, `securitytrails`; `merge_prefer` — приоритет при сортировке hostname в отчёте |
+| **geo** | `conflict_prefer` — кого считать эталоном, если ip-api / MaxMind / IP2Location расходятся (`maxmind` по умолчанию) |
+| **country_conflict** | веса `weight_geo` / `weight_whois` отдельно для **IPv4** и **IPv6** (влияет на auto_apply / quarantine при mismatch ASN) |
+
+```bash
+# показать текущие политики (или defaults)
+python3 fnkit.py --show-provider-policies
+
+# скопировать шаблон и отредактировать вручную
+cp data/config/provider_policies.example.json data/config/.provider_policies.json
+```
+
+**Пример passive DNS:** только RIPE (без платных API) — в меню **5** отключить VT/ST, или в JSON:
+
+```json
+"enabled": { "ripe": true, "virustotal": false, "securitytrails": false }
+```
+
+### Local intelligence cache (пункт 6)
+
+Кэширует успешные ответы внешних lookup'ов (geo, WHOIS, BGP, passive DNS, enrichment API).
+
+| Kind | TTL по умолчанию |
+|------|------------------|
+| `geo` | 24 ч |
+| `whois` | 7 дней |
+| `bgp` | 6 ч |
+| `pdns` | 12 ч |
+| `enrichment_*` | 24 ч (только web API) |
+
+```bash
+python3 fnkit.py --intel-cache-stats
+python3 fnkit.py --clear-intel-cache
+python3 fnkit.py -i 8.8.8.8 --intel-cache-verbose
+cp data/config/intel_cache.example.json data/config/.intel_cache.json
+```
 
 ```bash
 pip install -r requirements-optional.txt
@@ -1048,6 +1112,7 @@ Checked 87 hosts, CNAME on 12, suspects: 1
 | 3 | `nslookup` проверяемого IP |
 | 4 | OWASP Secure Headers (быстро) |
 | 5 | TLS check (:443, stdlib ssl) |
+| 6 | **IP pivot map** (HTML-граф, vis-network) |
 | 0 | Пропустить |
 
 **Пример (nmap):**
@@ -1056,10 +1121,37 @@ Checked 87 hosts, CNAME on 12, suspects: 1
 Running: nmap -A -T4 8.8.8.8
 … (вывод nmap) …
 — done —
-Select (0-5):
+Select (0-6):
 ```
 
 > **Authorized use:** nmap, DNS wordlist, Amass, Nettacker — только для целей, на которые у вас есть разрешение.
+
+---
+
+## IP pivot map
+
+Граф **от IP**: passive DNS (RIPE, VT, SecurityTrails) → домены → (опционально) resolve A/AAAA → соседние IP. HTML в `data/pivot_graph/`, сессия в `data/sessions/pivot/`.
+
+### Глубина (`--pivot-depth` / запрос в меню 6)
+
+| Глубина | Что попадает в граф |
+|--------|---------------------|
+| **0** | Только **seed IP**: PTR, исторические hostname, BGP/ASN (без forward DNS resolve). Быстро, без `dnspython`. |
+| **1** | Как 0 + **resolve** hostname с seed → связанные IP (shared hosting, CDN, старые A-записи). **Рекомендуется по умолчанию.** |
+| **2** | Как 1 + для каждой связанной IP снова passive DNS и resolve **их** hostname → вторая волна IP (цепочка инфраструктуры). Медленнее, больше узлов. |
+
+```bash
+# Только passive на 8.8.8.8
+python3 fnkit.py --pivot-ip 8.8.8.8 --pivot-depth 0 --pivot-save
+
+# После полной проверки IP — pivot с уже собранным passive DNS
+python3 fnkit.py -i 1.2.3.4 --pdns --pivot-map --pivot-depth 1 --pivot-save
+
+# Два хопа + свой путь HTML
+python3 fnkit.py --pivot-ip 1.2.3.4 --pivot-depth 2 --pivot-export data/pivot_graph/case.html
+```
+
+Для глубины **≥ 1** нужен `pip install -r requirements-dns.txt` (`dnspython`).
 
 ---
 
@@ -1125,6 +1217,11 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 | `--ptr-scan` | Geo | Bulk PTR для `-r` (rate-limit `--ptr-qps`) |
 | `--ptr-qps` | Geo | PTR queries/sec (default 10) |
 | `--ptr-save` | Geo | Сохранить в `data/sessions/ptr/` |
+| `--pivot-map` | Geo | После `-i`: построить IP pivot map |
+| `--pivot-ip` | Pivot | Pivot только для IP (без полной geo-проверки) |
+| `--pivot-depth` | Pivot | `0` / `1` / `2` (см. [IP pivot map](#ip-pivot-map)) |
+| `--pivot-export` | Pivot | Путь к HTML-графу |
+| `--pivot-save` | Pivot | JSON в `data/sessions/pivot/` |
 | `--speed-test` | Diag | ICMP + Cloudflare HTTP (parallel streams) |
 | `--speed-streams N` | Diag | Число HTTP-потоков для speed-test (default 4) |
 | `--trace-monitor HOST` | Diag | Монитор маршрута |
@@ -1165,6 +1262,12 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 | `--maintain-db` | Meta | Обслуживание `data/asn_database.json` (dedupe, prune, validate) |
 | `--validate-db` | Meta | Только проверка схемы/пулов без записи |
 | `--check-deps` | Meta | Проверка зависимостей |
+| `--show-provider-policies` | Meta | Текущие provider priority policies |
+| `--no-intel-cache` | Cache | Без локального intelligence cache |
+| `--intel-cache-refresh` | Cache | Игнорировать кэш, обновить записи |
+| `--intel-cache-verbose` | Cache | Строка при cache hit |
+| `--intel-cache-stats` | Cache | Статистика кэша и выход |
+| `--clear-intel-cache` | Cache | Очистка (`all` или kind) |
 | `--check-deps-group` | Meta | minimal, dns, pcap, owasp, full… |
 | `--check-deps-hints` | Meta | Подсказки установки |
 
