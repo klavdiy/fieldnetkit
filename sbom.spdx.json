@@ -3,11 +3,11 @@
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
   "name": "ip_checker-sbom",
-  "documentNamespace": "https://example.local/spdx/ip_checker/6f7be047a274",
+  "documentNamespace": "https://example.local/spdx/ip_checker/2cb73d3a0f3b",
   "creationInfo": {
-    "created": "2026-01-01T00:00:00Z",
+    "created": "2026-05-19T12:00:00Z",
     "creators": [
-      "Tool: generate_sbom.py"
+      "Tool: generate_sbom.py-2.0.0"
     ],
     "licenseListVersion": "3.25"
   },
@@ -23,15 +23,16 @@
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "filesAnalyzed": false,
-      "primaryPackagePurpose": "APPLICATION"
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "SBOM from dependencies.manifest.json"
     },
     {
       "SPDXID": "SPDXRef-7f3f21bcf4db",
-      "name": "python",
+      "name": "Python",
       "versionInfo": "3.10",
       "downloadLocation": "NOASSERTION",
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
+      "licenseConcluded": "PSF-2.0",
+      "licenseDeclared": "PSF-2.0",
       "filesAnalyzed": false,
       "externalRefs": [
         {
@@ -40,44 +41,8 @@
           "referenceLocator": "pkg:generic/python@3.10"
         }
       ],
-      "primaryPackagePurpose": "APPLICATION",
-      "description": ""
-    },
-    {
-      "SPDXID": "SPDXRef-d7133a91d1b9",
-      "name": "geoip2",
-      "versionInfo": "UNKNOWN",
-      "downloadLocation": "NOASSERTION",
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "filesAnalyzed": false,
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceType": "purl",
-          "referenceLocator": "pkg:pypi/geoip2"
-        }
-      ],
-      "primaryPackagePurpose": "LIBRARY",
-      "description": "Optional enrichment provider (MaxMind)"
-    },
-    {
-      "SPDXID": "SPDXRef-d43940a3858a",
-      "name": "IP2Location",
-      "versionInfo": "UNKNOWN",
-      "downloadLocation": "NOASSERTION",
-      "licenseConcluded": "NOASSERTION",
-      "licenseDeclared": "NOASSERTION",
-      "filesAnalyzed": false,
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceType": "purl",
-          "referenceLocator": "pkg:pypi/ip2location"
-        }
-      ],
-      "primaryPackagePurpose": "LIBRARY",
-      "description": "Optional enrichment provider (IP2Location)"
+      "primaryPackagePurpose": "FRAMEWORK",
+      "description": "Modules: ip_checker.py, network_diag.py, pcap_diag.py, dns_diag.py, owasp_toolkit.py"
     },
     {
       "SPDXID": "SPDXRef-510544e60710",
@@ -95,7 +60,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "System CLI utility used for ASN/WHOIS lookups"
+      "description": "Modules: ip_checker.py"
     },
     {
       "SPDXID": "SPDXRef-57c99176b7f3",
@@ -113,7 +78,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "System CLI utility used in diagnostics"
+      "description": "Modules: network_diag.py"
     },
     {
       "SPDXID": "SPDXRef-83f9a283d398",
@@ -131,7 +96,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "System CLI utility (or tracert on Windows) for route diagnostics"
+      "description": "Modules: network_diag.py, ip_checker.py; Feature: diagnostics"
     },
     {
       "SPDXID": "SPDXRef-76efa99bfde4",
@@ -149,7 +114,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Windows route diagnostics utility alternative to traceroute"
+      "description": "Modules: network_diag.py; Feature: diagnostics"
     },
     {
       "SPDXID": "SPDXRef-eccf1220f06f",
@@ -167,7 +132,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "System CLI utility for DNS checks"
+      "description": "Modules: ip_checker.py; Feature: diagnostics"
     },
     {
       "SPDXID": "SPDXRef-24687a578232",
@@ -185,7 +150,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "System CLI utility for extended network scanning"
+      "description": "Modules: ip_checker.py; Feature: scan"
     },
     {
       "SPDXID": "SPDXRef-9a0b5935eedd",
@@ -203,7 +168,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "System CLI utility for packet capture and fallback PCAP read"
+      "description": "Modules: pcap_diag.py; Feature: pcap"
     },
     {
       "SPDXID": "SPDXRef-b26aa4d9c967",
@@ -221,7 +186,169 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "System CLI utility for detailed PCAP decoding"
+      "description": "Modules: pcap_diag.py, dns_diag.py; Feature: pcap"
+    },
+    {
+      "SPDXID": "SPDXRef-f2235cc92bee",
+      "name": "dnspython",
+      "versionInfo": "2.4.0",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "ISC",
+      "licenseDeclared": "ISC",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/dnspython@2.4.0"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY",
+      "description": "Modules: dns_diag.py; Feature: dns"
+    },
+    {
+      "SPDXID": "SPDXRef-d7133a91d1b9",
+      "name": "geoip2",
+      "versionInfo": "4.8.0",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/geoip2"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY",
+      "description": "Modules: ip_checker.py; Feature: enrichment"
+    },
+    {
+      "SPDXID": "SPDXRef-d43940a3858a",
+      "name": "IP2Location",
+      "versionInfo": "8.10.0",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/ip2location"
+        }
+      ],
+      "primaryPackagePurpose": "LIBRARY",
+      "description": "Modules: ip_checker.py; Feature: enrichment"
+    },
+    {
+      "SPDXID": "SPDXRef-aaa7da05583c",
+      "name": "amass",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/amass"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "Modules: owasp_toolkit.py; Feature: owasp"
+    },
+    {
+      "SPDXID": "SPDXRef-fb9b6e66aa23",
+      "name": "nettacker",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "AGPL-3.0",
+      "licenseDeclared": "AGPL-3.0",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/nettacker"
+        }
+      ],
+      "primaryPackagePurpose": "APPLICATION",
+      "description": "Modules: owasp_toolkit.py; Feature: owasp"
+    },
+    {
+      "SPDXID": "SPDXRef-18509dc2ccaa",
+      "name": "ip-api.com",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/ip-api.com"
+        }
+      ],
+      "primaryPackagePurpose": "OTHER",
+      "description": "Modules: ip_checker.py, dns_diag.py; Feature: core"
+    },
+    {
+      "SPDXID": "SPDXRef-fc57b82df5d9",
+      "name": "crt.sh",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/crt.sh"
+        }
+      ],
+      "primaryPackagePurpose": "OTHER",
+      "description": "Modules: dns_diag.py; Feature: dns"
+    },
+    {
+      "SPDXID": "SPDXRef-e1e67bdda364",
+      "name": "speed.cloudflare.com",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/speed.cloudflare.com"
+        }
+      ],
+      "primaryPackagePurpose": "OTHER",
+      "description": "Modules: network_diag.py; Feature: speedtest"
+    },
+    {
+      "SPDXID": "SPDXRef-0e8728032ecd",
+      "name": "RIR WHOIS",
+      "versionInfo": "UNKNOWN",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:generic/rir-whois"
+        }
+      ],
+      "primaryPackagePurpose": "OTHER",
+      "description": "Modules: ip_checker.py; Feature: core"
     }
   ],
   "relationships": [
@@ -229,16 +356,6 @@
       "spdxElementId": "SPDXRef-Package-ip_checker",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-7f3f21bcf4db"
-    },
-    {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
-      "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-d7133a91d1b9"
-    },
-    {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
-      "relationshipType": "DEPENDS_ON",
-      "relatedSpdxElement": "SPDXRef-d43940a3858a"
     },
     {
       "spdxElementId": "SPDXRef-Package-ip_checker",
@@ -279,6 +396,51 @@
       "spdxElementId": "SPDXRef-Package-ip_checker",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-b26aa4d9c967"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-f2235cc92bee"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-d7133a91d1b9"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-d43940a3858a"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-aaa7da05583c"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-fb9b6e66aa23"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-18509dc2ccaa"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-fc57b82df5d9"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-e1e67bdda364"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-0e8728032ecd"
     }
   ]
 }

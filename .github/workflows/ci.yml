@@ -24,14 +24,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install optional Python dependencies
+        run: pip install -r requirements-dns.txt -r requirements-optional.txt
+
       - name: Compile bytecode
-        run: python -m compileall -q ip_checker.py network_diag.py pcap_diag.py
+        run: python -m compileall -q ip_checker.py network_diag.py pcap_diag.py dns_diag.py owasp_toolkit.py scripts/check_deps.py tools/generate_sbom.py
 
       - name: CLI help (argparse loads)
         run: python ip_checker.py -h
 
       - name: Import modules
-        run: python -c "import ip_checker; import network_diag; import pcap_diag"
+        run: python -c "import ip_checker; import network_diag; import pcap_diag; import dns_diag; import owasp_toolkit"
+
+      - name: Check minimal dependencies (manifest)
+        if: matrix.python-version == '3.10'
+        run: python scripts/check_deps.py --group minimal --no-fail
 
       - name: Regenerate SBOM files
         if: matrix.python-version == '3.10'
@@ -39,4 +46,4 @@ jobs:
 
       - name: Ensure SBOM files are up to date
         if: matrix.python-version == '3.10'
-        run: git diff --exit-code -- sbom.cdx.json sbom.spdx.json
+        run: git diff --exit-code -- sbom.cdx.json sbom.spdx.json dependencies.manifest.json

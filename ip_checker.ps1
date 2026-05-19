@@ -23,6 +23,11 @@ if (-not $launcher) {
     exit 1
 }
 
+if ($env:INSTALL_DEPS -eq "1") {
+    $profile = if ($env:INSTALL_PROFILE) { $env:INSTALL_PROFILE } else { "minimal" }
+    & (Join-Path $ScriptDir "scripts\install-deps.ps1") -Profile $profile
+}
+
 if ($launcher -eq "py") {
     & py -3 $PyScript @args
 } else {

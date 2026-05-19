@@ -3,13 +3,18 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
   "version": 1,
-  "serialNumber": "urn:uuid:e1d4b66f-0092-54cb-a4d0-5c9567af7954",
+  "serialNumber": "urn:uuid:f15e18f8-615d-5ad2-b675-7f3c000d5ebf",
   "metadata": {
-    "timestamp": "2026-01-01T00:00:00Z",
+    "timestamp": "2026-05-19T12:00:00Z",
     "tools": [
       {
         "vendor": "klavdiy",
-        "name": "generate_sbom.py"
+        "name": "generate_sbom.py",
+        "version": "2.0.0"
+      },
+      {
+        "name": "dependencies.manifest.json",
+        "version": "ip_checker_deps/1"
       }
     ],
     "component": {
@@ -17,7 +22,7 @@
       "type": "application",
       "name": "ip_checker",
       "version": "0.1.0",
-      "description": "CLI utility for IP/ASN geo checks and network diagnostics",
+      "description": "CLI: IP/ASN geo, network diagnostics, PCAP, DNS graph, OWASP toolkit bridge. SBOM generated from dependencies.manifest.json",
       "licenses": [
         {
           "license": {
@@ -30,35 +35,63 @@
   "components": [
     {
       "type": "framework",
-      "name": "python",
-      "version": "3.10",
+      "name": "Python",
       "purl": "pkg:generic/python@3.10",
       "scope": "required",
+      "description": "Modules: ip_checker.py, network_diag.py, pcap_diag.py, dns_diag.py, owasp_toolkit.py",
+      "version": "3.10",
+      "licenses": [
+        {
+          "license": {
+            "id": "PSF-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "ip_checker:install:macos:brew",
+          "value": "python@3.12"
+        },
+        {
+          "name": "ip_checker:install:linux:apt",
+          "value": "python3 python3-pip python3-venv"
+        },
+        {
+          "name": "ip_checker:install:windows:winget",
+          "value": "Python.Python.3.12"
+        },
+        {
+          "name": "ip_checker:install:windows:choco",
+          "value": "python"
+        }
+      ],
       "bom-ref": "pkg:generic/python@3.10"
-    },
-    {
-      "type": "library",
-      "name": "geoip2",
-      "purl": "pkg:pypi/geoip2",
-      "scope": "optional",
-      "description": "Optional enrichment provider (MaxMind)",
-      "bom-ref": "pkg:pypi/geoip2"
-    },
-    {
-      "type": "library",
-      "name": "IP2Location",
-      "purl": "pkg:pypi/ip2location",
-      "scope": "optional",
-      "description": "Optional enrichment provider (IP2Location)",
-      "bom-ref": "pkg:pypi/ip2location"
     },
     {
       "type": "application",
       "name": "whois",
-      "version": "1.0+",
       "purl": "pkg:generic/whois@1.0",
       "scope": "required",
-      "description": "System CLI utility used for ASN/WHOIS lookups",
+      "description": "Modules: ip_checker.py",
+      "version": "1.0+",
+      "properties": [
+        {
+          "name": "ip_checker:install:macos:brew",
+          "value": "whois"
+        },
+        {
+          "name": "ip_checker:install:linux:apt",
+          "value": "whois"
+        },
+        {
+          "name": "ip_checker:install:windows:choco",
+          "value": "whois"
+        },
+        {
+          "name": "ip_checker:install:windows",
+          "value": "Or Sysinternals / third-party whois.exe on PATH"
+        }
+      ],
       "bom-ref": "pkg:generic/whois@1.0"
     },
     {
@@ -66,7 +99,21 @@
       "name": "ping",
       "purl": "pkg:generic/ping",
       "scope": "required",
-      "description": "System CLI utility used in diagnostics",
+      "description": "Modules: network_diag.py",
+      "properties": [
+        {
+          "name": "ip_checker:install:macos",
+          "value": "Preinstalled on macOS"
+        },
+        {
+          "name": "ip_checker:install:linux:apt",
+          "value": "iputils-ping"
+        },
+        {
+          "name": "ip_checker:install:windows",
+          "value": "Built into Windows"
+        }
+      ],
       "bom-ref": "pkg:generic/ping"
     },
     {
@@ -74,7 +121,25 @@
       "name": "traceroute",
       "purl": "pkg:generic/traceroute",
       "scope": "optional",
-      "description": "System CLI utility (or tracert on Windows) for route diagnostics",
+      "description": "Modules: network_diag.py, ip_checker.py; Feature: diagnostics",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "diagnostics"
+        },
+        {
+          "name": "ip_checker:install:macos",
+          "value": "Often preinstalled"
+        },
+        {
+          "name": "ip_checker:install:linux:apt",
+          "value": "traceroute"
+        },
+        {
+          "name": "ip_checker:install:windows",
+          "value": "Use tracert (built-in)"
+        }
+      ],
       "bom-ref": "pkg:generic/traceroute"
     },
     {
@@ -82,7 +147,17 @@
       "name": "tracert",
       "purl": "pkg:generic/tracert",
       "scope": "optional",
-      "description": "Windows route diagnostics utility alternative to traceroute",
+      "description": "Modules: network_diag.py; Feature: diagnostics",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "diagnostics"
+        },
+        {
+          "name": "ip_checker:install:windows",
+          "value": "Built into Windows"
+        }
+      ],
       "bom-ref": "pkg:generic/tracert"
     },
     {
@@ -90,7 +165,25 @@
       "name": "nslookup",
       "purl": "pkg:generic/nslookup",
       "scope": "optional",
-      "description": "System CLI utility for DNS checks",
+      "description": "Modules: ip_checker.py; Feature: diagnostics",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "diagnostics"
+        },
+        {
+          "name": "ip_checker:install:macos",
+          "value": "Preinstalled"
+        },
+        {
+          "name": "ip_checker:install:linux:apt",
+          "value": "dnsutils"
+        },
+        {
+          "name": "ip_checker:install:windows",
+          "value": "Built into Windows"
+        }
+      ],
       "bom-ref": "pkg:generic/nslookup"
     },
     {
@@ -98,7 +191,29 @@
       "name": "nmap",
       "purl": "pkg:generic/nmap",
       "scope": "optional",
-      "description": "System CLI utility for extended network scanning",
+      "description": "Modules: ip_checker.py; Feature: scan",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "scan"
+        },
+        {
+          "name": "ip_checker:install:macos:brew",
+          "value": "nmap"
+        },
+        {
+          "name": "ip_checker:install:linux:apt",
+          "value": "nmap"
+        },
+        {
+          "name": "ip_checker:install:windows:choco",
+          "value": "nmap"
+        },
+        {
+          "name": "ip_checker:install:windows:winget",
+          "value": "Insecure.Nmap"
+        }
+      ],
       "bom-ref": "pkg:generic/nmap"
     },
     {
@@ -106,7 +221,25 @@
       "name": "tcpdump",
       "purl": "pkg:generic/tcpdump",
       "scope": "optional",
-      "description": "System CLI utility for packet capture and fallback PCAP read",
+      "description": "Modules: pcap_diag.py; Feature: pcap",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "pcap"
+        },
+        {
+          "name": "ip_checker:install:macos",
+          "value": "Preinstalled on many macOS versions"
+        },
+        {
+          "name": "ip_checker:install:linux:apt",
+          "value": "tcpdump"
+        },
+        {
+          "name": "ip_checker:install:windows",
+          "value": "Use WSL or Npcap build; not native on Windows"
+        }
+      ],
       "bom-ref": "pkg:generic/tcpdump"
     },
     {
@@ -114,8 +247,242 @@
       "name": "tshark",
       "purl": "pkg:generic/tshark",
       "scope": "optional",
-      "description": "System CLI utility for detailed PCAP decoding",
+      "description": "Modules: pcap_diag.py, dns_diag.py; Feature: pcap",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "pcap"
+        },
+        {
+          "name": "ip_checker:install:macos:brew",
+          "value": "wireshark"
+        },
+        {
+          "name": "ip_checker:install:linux:apt",
+          "value": "tshark wireshark-common"
+        },
+        {
+          "name": "ip_checker:install:windows:choco",
+          "value": "wireshark"
+        },
+        {
+          "name": "ip_checker:install:windows:winget",
+          "value": "WiresharkFoundation.Wireshark"
+        }
+      ],
       "bom-ref": "pkg:generic/tshark"
+    },
+    {
+      "type": "library",
+      "name": "dnspython",
+      "purl": "pkg:pypi/dnspython@2.4.0",
+      "scope": "optional",
+      "description": "Modules: dns_diag.py; Feature: dns",
+      "version": "2.4.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "dns"
+        },
+        {
+          "name": "ip_checker:install:all:pip",
+          "value": "-r requirements-dns.txt"
+        }
+      ],
+      "bom-ref": "pkg:pypi/dnspython@2.4.0"
+    },
+    {
+      "type": "library",
+      "name": "geoip2",
+      "purl": "pkg:pypi/geoip2",
+      "scope": "optional",
+      "description": "Modules: ip_checker.py; Feature: enrichment",
+      "version": "4.8.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "enrichment"
+        },
+        {
+          "name": "ip_checker:install:all:pip",
+          "value": "geoip2>=4.8.0"
+        }
+      ],
+      "bom-ref": "pkg:pypi/geoip2"
+    },
+    {
+      "type": "library",
+      "name": "IP2Location",
+      "purl": "pkg:pypi/ip2location",
+      "scope": "optional",
+      "description": "Modules: ip_checker.py; Feature: enrichment",
+      "version": "8.10.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "enrichment"
+        },
+        {
+          "name": "ip_checker:install:all:pip",
+          "value": "IP2Location>=8.10.0"
+        }
+      ],
+      "bom-ref": "pkg:pypi/ip2location"
+    },
+    {
+      "type": "application",
+      "name": "amass",
+      "purl": "pkg:generic/amass",
+      "scope": "optional",
+      "description": "Modules: owasp_toolkit.py; Feature: owasp",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "owasp"
+        },
+        {
+          "name": "ip_checker:install:macos:brew",
+          "value": "amass"
+        },
+        {
+          "name": "ip_checker:install:linux",
+          "value": "https://github.com/owasp-amass/amass#installation"
+        },
+        {
+          "name": "ip_checker:install:windows:choco",
+          "value": "amass"
+        },
+        {
+          "name": "ip_checker:install:windows",
+          "value": "Or download release binary"
+        }
+      ],
+      "bom-ref": "pkg:generic/amass"
+    },
+    {
+      "type": "application",
+      "name": "nettacker",
+      "purl": "pkg:generic/nettacker",
+      "scope": "optional",
+      "description": "Modules: owasp_toolkit.py; Feature: owasp",
+      "licenses": [
+        {
+          "license": {
+            "id": "AGPL-3.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "owasp"
+        },
+        {
+          "name": "ip_checker:install:all",
+          "value": "git clone https://github.com/OWASP/Nettacker && pip install -r requirements.txt (AGPL-3.0)"
+        }
+      ],
+      "bom-ref": "pkg:generic/nettacker"
+    },
+    {
+      "type": "service",
+      "name": "ip-api.com",
+      "purl": "pkg:generic/ip-api.com",
+      "scope": "required",
+      "description": "Modules: ip_checker.py, dns_diag.py; Feature: core",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "core"
+        },
+        {
+          "name": "ip_checker:install:all",
+          "value": "Public HTTPS/HTTP API; no install"
+        }
+      ],
+      "bom-ref": "pkg:generic/ip-api.com"
+    },
+    {
+      "type": "service",
+      "name": "crt.sh",
+      "purl": "pkg:generic/crt.sh",
+      "scope": "optional",
+      "description": "Modules: dns_diag.py; Feature: dns",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "dns"
+        },
+        {
+          "name": "ip_checker:install:all",
+          "value": "Public certificate transparency API"
+        }
+      ],
+      "bom-ref": "pkg:generic/crt.sh"
+    },
+    {
+      "type": "service",
+      "name": "speed.cloudflare.com",
+      "purl": "pkg:generic/speed.cloudflare.com",
+      "scope": "optional",
+      "description": "Modules: network_diag.py; Feature: speedtest",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "speedtest"
+        },
+        {
+          "name": "ip_checker:install:all",
+          "value": "Cloudflare speed test endpoints"
+        }
+      ],
+      "bom-ref": "pkg:generic/speed.cloudflare.com"
+    },
+    {
+      "type": "service",
+      "name": "RIR WHOIS",
+      "purl": "pkg:generic/rir-whois",
+      "scope": "required",
+      "description": "Modules: ip_checker.py; Feature: core",
+      "properties": [
+        {
+          "name": "ip_checker:featureGroup",
+          "value": "core"
+        },
+        {
+          "name": "ip_checker:install:all",
+          "value": "Regional registries; no separate install"
+        }
+      ],
+      "bom-ref": "pkg:generic/rir-whois"
     }
   ],
   "dependencies": [
@@ -123,8 +490,6 @@
       "ref": "app:ip_checker@0.1.0",
       "dependsOn": [
         "pkg:generic/python@3.10",
-        "pkg:pypi/geoip2",
-        "pkg:pypi/ip2location",
         "pkg:generic/whois@1.0",
         "pkg:generic/ping",
         "pkg:generic/traceroute",
@@ -132,7 +497,16 @@
         "pkg:generic/nslookup",
         "pkg:generic/nmap",
         "pkg:generic/tcpdump",
-        "pkg:generic/tshark"
+        "pkg:generic/tshark",
+        "pkg:pypi/dnspython@2.4.0",
+        "pkg:pypi/geoip2",
+        "pkg:pypi/ip2location",
+        "pkg:generic/amass",
+        "pkg:generic/nettacker",
+        "pkg:generic/ip-api.com",
+        "pkg:generic/crt.sh",
+        "pkg:generic/speed.cloudflare.com",
+        "pkg:generic/rir-whois"
       ]
     }
   ]

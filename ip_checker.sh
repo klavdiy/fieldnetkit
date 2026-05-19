@@ -19,5 +19,10 @@ if [ ! -f "$PYTHON_SCRIPT" ]; then
     exit 1
 fi
 
+# Optional: ./ip_checker.sh --check-deps  or  INSTALL_DEPS=1 ./ip_checker.sh
+if [[ "${INSTALL_DEPS:-}" == "1" ]]; then
+    "$SCRIPT_DIR/scripts/install-deps.sh" "${INSTALL_PROFILE:-minimal}"
+fi
+
 # Run the Python script with all passed arguments
 python3 "$PYTHON_SCRIPT" "$@"

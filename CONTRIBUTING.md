@@ -5,13 +5,16 @@
 ## Окружение
 
 - **Python 3.10+** (см. CI в `.github/workflows/ci.yml`).
-- Рекомендуется виртуальное окружение не обязательно: проект без `requirements.txt`, только стандартная библиотека + внешние CLI (`whois`, `nmap`, `traceroute`, `ping`, опционально `tshark` / `tcpdump`).
+- Зависимости описаны в **`dependencies.manifest.json`**; SBOM — **`sbom.cdx.json`** / **`docs/SBOM.md`**.
+- Установка: `./scripts/install-deps.sh minimal` (macOS/Linux) или `.\scripts\install-deps.ps1 -Profile minimal` (Windows).
+- Pip (опционально): `requirements-dns.txt`, `requirements-optional.txt`.
 
 ## Локальный запуск
 
 ```bash
+python3 scripts/check_deps.py --group minimal
 python3 ip_checker.py -h
-./ip_checker.sh          # при необходимости: chmod +x ip_checker.sh
+./ip_checker.sh          # INSTALL_DEPS=1 ./ip_checker.sh — установить deps перед запуском
 ```
 
 ## Проверки перед PR
@@ -19,10 +22,15 @@ python3 ip_checker.py -h
 Выполните те же шаги, что и в CI:
 
 ```bash
-python3 -m compileall -q ip_checker.py network_diag.py pcap_diag.py
+pip install -r requirements-dns.txt -r requirements-optional.txt
+python3 -m compileall -q ip_checker.py network_diag.py pcap_diag.py dns_diag.py owasp_toolkit.py
 python3 ip_checker.py -h
-python3 -c "import ip_checker; import network_diag; import pcap_diag"
+python3 scripts/check_deps.py --group minimal --no-fail
+python3 tools/generate_sbom.py
+git diff --exit-code -- sbom.cdx.json sbom.spdx.json dependencies.manifest.json
 ```
+
+При добавлении внешней зависимости обновите **`dependencies.manifest.json`**, при необходимости `requirements-*.txt`, перегенерируйте SBOM и **`scripts/install-deps.*`**.
 
 ## Рекомендации по коду
 

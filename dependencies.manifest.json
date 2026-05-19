@@ -1,0 +1,281 @@
+{
+  "schema": "ip_checker_deps/1",
+  "app": {
+    "name": "ip_checker",
+    "version": "0.1.0",
+    "license": "MIT"
+  },
+  "feature_groups": {
+    "core": ["python", "whois", "ping", "ip-api.com", "rir-whois"],
+    "diagnostics": ["traceroute", "tracert", "nslookup"],
+    "scan": ["nmap"],
+    "pcap": ["tcpdump", "tshark"],
+    "dns": ["dnspython", "crt.sh", "tshark"],
+    "enrichment": ["geoip2", "ip2location"],
+    "owasp": ["amass", "nettacker"],
+    "speedtest": ["speed.cloudflare.com"]
+  },
+  "dependencies": [
+    {
+      "id": "python",
+      "name": "Python",
+      "type": "framework",
+      "scope": "required",
+      "version": ">=3.10",
+      "purl": "pkg:generic/python@3.10",
+      "license": "PSF-2.0",
+      "modules": ["ip_checker.py", "network_diag.py", "pcap_diag.py", "dns_diag.py", "owasp_toolkit.py"],
+      "check": { "kind": "python_version", "min": "3.10" },
+      "install": {
+        "macos": { "brew": ["python@3.12"] },
+        "linux": { "apt": ["python3", "python3-pip", "python3-venv"] },
+        "windows": { "winget": ["Python.Python.3.12"], "choco": ["python"] }
+      }
+    },
+    {
+      "id": "whois",
+      "name": "whois",
+      "type": "application",
+      "scope": "required",
+      "version": "1.0+",
+      "purl": "pkg:generic/whois@1.0",
+      "license": "NOASSERTION",
+      "modules": ["ip_checker.py"],
+      "check": { "kind": "cli", "bins": ["whois"] },
+      "install": {
+        "macos": { "brew": ["whois"] },
+        "linux": { "apt": ["whois"] },
+        "windows": { "choco": ["whois"], "note": "Or Sysinternals / third-party whois.exe on PATH" }
+      }
+    },
+    {
+      "id": "ping",
+      "name": "ping",
+      "type": "application",
+      "scope": "required",
+      "purl": "pkg:generic/ping",
+      "license": "NOASSERTION",
+      "modules": ["network_diag.py"],
+      "check": { "kind": "cli", "bins": ["ping"] },
+      "install": {
+        "macos": { "note": "Preinstalled on macOS" },
+        "linux": { "apt": ["iputils-ping"] },
+        "windows": { "note": "Built into Windows" }
+      }
+    },
+    {
+      "id": "traceroute",
+      "name": "traceroute",
+      "type": "application",
+      "scope": "optional",
+      "purl": "pkg:generic/traceroute",
+      "license": "NOASSERTION",
+      "feature_group": "diagnostics",
+      "modules": ["network_diag.py", "ip_checker.py"],
+      "check": { "kind": "cli_any", "bins": ["traceroute", "traceroute6", "tracert"] },
+      "install": {
+        "macos": { "note": "Often preinstalled" },
+        "linux": { "apt": ["traceroute"] },
+        "windows": { "note": "Use tracert (built-in)" }
+      }
+    },
+    {
+      "id": "tracert",
+      "name": "tracert",
+      "type": "application",
+      "scope": "optional",
+      "purl": "pkg:generic/tracert",
+      "license": "NOASSERTION",
+      "feature_group": "diagnostics",
+      "platforms": ["windows"],
+      "modules": ["network_diag.py"],
+      "check": { "kind": "cli", "bins": ["tracert"] },
+      "install": { "windows": { "note": "Built into Windows" } }
+    },
+    {
+      "id": "nslookup",
+      "name": "nslookup",
+      "type": "application",
+      "scope": "optional",
+      "purl": "pkg:generic/nslookup",
+      "license": "NOASSERTION",
+      "feature_group": "diagnostics",
+      "modules": ["ip_checker.py"],
+      "check": { "kind": "cli", "bins": ["nslookup"] },
+      "install": {
+        "macos": { "note": "Preinstalled" },
+        "linux": { "apt": ["dnsutils"] },
+        "windows": { "note": "Built into Windows" }
+      }
+    },
+    {
+      "id": "nmap",
+      "name": "nmap",
+      "type": "application",
+      "scope": "optional",
+      "purl": "pkg:generic/nmap",
+      "license": "NOASSERTION",
+      "feature_group": "scan",
+      "modules": ["ip_checker.py"],
+      "check": { "kind": "cli", "bins": ["nmap"] },
+      "install": {
+        "macos": { "brew": ["nmap"] },
+        "linux": { "apt": ["nmap"] },
+        "windows": { "choco": ["nmap"], "winget": ["Insecure.Nmap"] }
+      }
+    },
+    {
+      "id": "tcpdump",
+      "name": "tcpdump",
+      "type": "application",
+      "scope": "optional",
+      "purl": "pkg:generic/tcpdump",
+      "license": "NOASSERTION",
+      "feature_group": "pcap",
+      "modules": ["pcap_diag.py"],
+      "check": { "kind": "cli", "bins": ["tcpdump"] },
+      "install": {
+        "macos": { "note": "Preinstalled on many macOS versions" },
+        "linux": { "apt": ["tcpdump"] },
+        "windows": { "note": "Use WSL or Npcap build; not native on Windows" }
+      }
+    },
+    {
+      "id": "tshark",
+      "name": "tshark",
+      "type": "application",
+      "scope": "optional",
+      "purl": "pkg:generic/tshark",
+      "license": "NOASSERTION",
+      "feature_group": "pcap",
+      "modules": ["pcap_diag.py", "dns_diag.py"],
+      "check": { "kind": "cli", "bins": ["tshark"] },
+      "install": {
+        "macos": { "brew": ["wireshark"] },
+        "linux": { "apt": ["tshark", "wireshark-common"] },
+        "windows": { "choco": ["wireshark"], "winget": ["WiresharkFoundation.Wireshark"] }
+      }
+    },
+    {
+      "id": "dnspython",
+      "name": "dnspython",
+      "type": "library",
+      "scope": "optional",
+      "version": ">=2.4.0",
+      "purl": "pkg:pypi/dnspython@2.4.0",
+      "license": "ISC",
+      "feature_group": "dns",
+      "modules": ["dns_diag.py"],
+      "check": { "kind": "pip", "import": "dns", "requirements": "requirements-dns.txt" },
+      "install": {
+        "all": { "pip": ["-r", "requirements-dns.txt"] }
+      }
+    },
+    {
+      "id": "geoip2",
+      "name": "geoip2",
+      "type": "library",
+      "scope": "optional",
+      "version": ">=4.8.0",
+      "purl": "pkg:pypi/geoip2",
+      "license": "Apache-2.0",
+      "feature_group": "enrichment",
+      "modules": ["ip_checker.py"],
+      "check": { "kind": "pip", "import": "geoip2", "requirements": "requirements-optional.txt" },
+      "install": { "all": { "pip": ["geoip2>=4.8.0"] } }
+    },
+    {
+      "id": "ip2location",
+      "name": "IP2Location",
+      "type": "library",
+      "scope": "optional",
+      "version": ">=8.10.0",
+      "purl": "pkg:pypi/ip2location",
+      "license": "MIT",
+      "feature_group": "enrichment",
+      "modules": ["ip_checker.py"],
+      "check": { "kind": "pip", "import": "IP2Location", "requirements": "requirements-optional.txt" },
+      "install": { "all": { "pip": ["IP2Location>=8.10.0"] } }
+    },
+    {
+      "id": "amass",
+      "name": "amass",
+      "type": "application",
+      "scope": "optional",
+      "purl": "pkg:generic/amass",
+      "license": "Apache-2.0",
+      "feature_group": "owasp",
+      "modules": ["owasp_toolkit.py"],
+      "check": { "kind": "cli", "bins": ["amass"] },
+      "install": {
+        "macos": { "brew": ["amass"] },
+        "linux": { "note": "https://github.com/owasp-amass/amass#installation" },
+        "windows": { "choco": ["amass"], "note": "Or download release binary" }
+      }
+    },
+    {
+      "id": "nettacker",
+      "name": "nettacker",
+      "type": "application",
+      "scope": "optional",
+      "purl": "pkg:generic/nettacker",
+      "license": "AGPL-3.0",
+      "feature_group": "owasp",
+      "modules": ["owasp_toolkit.py"],
+      "check": { "kind": "nettacker" },
+      "install": {
+        "all": {
+          "note": "git clone https://github.com/OWASP/Nettacker && pip install -r requirements.txt (AGPL-3.0)"
+        }
+      }
+    },
+    {
+      "id": "ip-api.com",
+      "name": "ip-api.com",
+      "type": "service",
+      "scope": "required",
+      "purl": "pkg:generic/ip-api.com",
+      "license": "NOASSERTION",
+      "feature_group": "core",
+      "modules": ["ip_checker.py", "dns_diag.py"],
+      "check": { "kind": "network", "url": "http://ip-api.com/json/1.1.1.1?fields=status" },
+      "install": { "all": { "note": "Public HTTPS/HTTP API; no install" } }
+    },
+    {
+      "id": "crt.sh",
+      "name": "crt.sh",
+      "type": "service",
+      "scope": "optional",
+      "purl": "pkg:generic/crt.sh",
+      "license": "NOASSERTION",
+      "feature_group": "dns",
+      "modules": ["dns_diag.py"],
+      "check": { "kind": "network", "url": "https://crt.sh/" },
+      "install": { "all": { "note": "Public certificate transparency API" } }
+    },
+    {
+      "id": "speed.cloudflare.com",
+      "name": "speed.cloudflare.com",
+      "type": "service",
+      "scope": "optional",
+      "purl": "pkg:generic/speed.cloudflare.com",
+      "license": "NOASSERTION",
+      "feature_group": "speedtest",
+      "modules": ["network_diag.py"],
+      "check": { "kind": "network", "url": "https://speed.cloudflare.com/" },
+      "install": { "all": { "note": "Cloudflare speed test endpoints" } }
+    },
+    {
+      "id": "rir-whois",
+      "name": "RIR WHOIS",
+      "type": "service",
+      "scope": "required",
+      "purl": "pkg:generic/rir-whois",
+      "license": "NOASSERTION",
+      "feature_group": "core",
+      "modules": ["ip_checker.py"],
+      "check": { "kind": "note", "message": "Reached via system whois client" },
+      "install": { "all": { "note": "Regional registries; no separate install" } }
+    }
+  ]
+}
