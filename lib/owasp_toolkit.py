@@ -6,7 +6,7 @@ License model (see docs/OWASP_THIRD_PARTY.md):
   - This file is MIT (same as FieldNet Kit). It does NOT bundle Amass, Nettacker, WSTG, or Secure Headers content.
   - Amass / Nettacker: optional external CLIs invoked via subprocess when installed by the user.
   - Secure Headers: built-in HTTP checks (presence + minimal value rules for HSTS/CSP/X-Frame-Options).
-  - TLS: stdlib ssl/socket — cert expiry, negotiated cipher/version, SSLv3/TLS1.0/1.1 probes.
+  - TLS: stdlib ssl/socket — cert expiry, negotiated cipher/version; legacy SSLv3/TLS1.0/1.1 via openssl when installed.
   - Subdomain takeover: CNAME + HTTP fingerprints (~50 public services; needs dnspython).
   - WSTG: curated checklist with links only (no substantial reproduction of CC-BY-SA text).
 """
@@ -73,11 +73,14 @@ WEAK_CIPHER_RE = re.compile(
     r"NULL|EXPORT|\bDES\b|3DES|RC4|MD5|anon|PSK|SRP|IDEA|SEED",
     re.I,
 )
+# (label, openssl s_client flag) — external probe avoids CodeQL py/insecure-protocol.
 LEGACY_TLS_PROBES: Tuple[Tuple[str, str], ...] = (
-    ("SSLv3", "SSLv3"),
-    ("TLSv1.0", "TLSv1"),
-    ("TLSv1.1", "TLSv1_1"),
+    ("SSLv3", "-ssl3"),
+    ("TLSv1.0", "-tls1"),
+    ("TLSv1.1", "-tls1_1"),
 )
+_LEGACY_PROTO_RE = re.compile(r"Protocol version:\s*(\S+)", re.I)
+_LEGACY_CIPHER_RE = re.compile(r"Ciphersuite:\s*(\S+)", re.I)
 
 # Short WSTG pointers — titles are our summaries; full text stays on GitHub (CC-BY-SA).
 WSTG_ITEMS: Tuple[Dict[str, str], ...] = (
@@ -627,28 +630,42 @@ def _tls_probe_legacy(
     *,
     sni: str,
     label: str,
-    attr: str,
+    openssl_flag: str,
     timeout: float,
 ) -> Optional[Dict[str, str]]:
-    ver = getattr(ssl.TLSVersion, attr, None)
-    if ver is None:
+    """Probe deprecated TLS via openssl s_client (not Python ssl — avoids weak protocol in-process)."""
+    if not shutil.which("openssl"):
         return None
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    ctx.minimum_version = ver
-    ctx.maximum_version = ver
     try:
-        with socket.create_connection((host, port), timeout=timeout) as raw:
-            with ctx.wrap_socket(raw, server_hostname=sni) as ssock:  # codeql[py/insecure-protocol]: legacy TLS audit probe
-                cipher = ssock.cipher()
-                return {
-                    "label": label,
-                    "version": ssock.version() or label,
-                    "cipher": cipher[0] if cipher else "?",
-                }
-    except (ssl.SSLError, OSError, socket.timeout):
+        proc = subprocess.run(
+            [
+                "openssl",
+                "s_client",
+                openssl_flag,
+                "-connect",
+                f"{host}:{port}",
+                "-servername",
+                sni,
+                "-brief",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            input="",
+            errors="replace",
+        )
+    except (subprocess.TimeoutExpired, OSError):
         return None
+    out = (proc.stdout or "") + (proc.stderr or "")
+    if proc.returncode != 0 or "CONNECTION ESTABLISHED" not in out:
+        return None
+    proto_m = _LEGACY_PROTO_RE.search(out)
+    cipher_m = _LEGACY_CIPHER_RE.search(out)
+    return {
+        "label": label,
+        "version": proto_m.group(1) if proto_m else label,
+        "cipher": cipher_m.group(1) if cipher_m else "?",
+    }
 
 
 def _append_tls_finding(
@@ -781,8 +798,10 @@ def check_tls(
                 findings, check="certificate", status="fail", detail=str(exc)[:200]
             )
 
-    for label, attr in LEGACY_TLS_PROBES:
-        hit = _tls_probe_legacy(host, use_port, sni=sni, label=label, attr=attr, timeout=timeout)
+    for label, openssl_flag in LEGACY_TLS_PROBES:
+        hit = _tls_probe_legacy(
+            host, use_port, sni=sni, label=label, openssl_flag=openssl_flag, timeout=timeout
+        )
         if hit:
             legacy_offered.append(hit)
             _append_tls_finding(
