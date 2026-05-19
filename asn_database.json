@@ -450,19 +450,19 @@
     },
     {
       "asn": "AS141039",
-      "owner": "Auto-added from IP 185.65.50.104",
-      "country_code": "IT",
-      "country_name": "Italy",
+      "owner": "Aktivnie Tehnologii LLC",
+      "country_code": "BY",
+      "country_name": "Belarus",
       "region": "Multi-Regional",
-      "expected_country": "IT",
-      "expected_country_name": "Italy",
+      "expected_country": "BY",
+      "expected_country_name": "Belarus",
       "ip_pools": [
         "185.0.0.0/8"
       ],
       "check_status": "active",
-      "last_checked": "2026-04-27",
+      "last_checked": "2026-05-19",
       "verified": false,
-      "notes": "Updated: IP geolocation verified as IT (Italy)"
+      "notes": "Updated: IP geolocation verified as BY (Belarus)"
     },
     {
       "asn": "AS15169",
@@ -829,11 +829,27 @@
       "last_checked": "2026-04-26",
       "verified": false,
       "notes": "Dell corporate / support networks (representative)"
+    },
+    {
+      "asn": "AS12406",
+      "owner": "Business Network Ltd",
+      "country_code": "BY",
+      "country_name": "Belarus",
+      "region": "Multi-Regional",
+      "expected_country": "BY",
+      "expected_country_name": "Belarus",
+      "ip_pools": [
+        "178.172.136.0/22"
+      ],
+      "check_status": "active",
+      "last_checked": "2026-05-19",
+      "verified": false,
+      "notes": "Auto-added entry for AS12406"
     }
   ],
   "metadata": {
     "version": "2.0",
-    "last_updated": "2026-05-13",
+    "last_updated": "2026-05-19",
     "description": "Extended database of ASN information with regional operators for RU, BY, KZ, CN, AM Includes reference ASNs for major global IT/cloud vendors.",
     "countries": {
       "RU": {
@@ -922,8 +938,8 @@
         "description": "United Kingdom operators"
       }
     },
-    "total_asns": 46,
-    "total_ip_pools": 140,
+    "total_asns": 47,
+    "total_ip_pools": 141,
     "last_update_check": "2026-05-13",
     "next_update_prompt_after": "2026-05-13",
     "quarantine_cases": [

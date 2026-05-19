@@ -121,6 +121,16 @@ TRANSLATIONS = {
         "unknown_ip_asn_prompt": "Enter ASN (e.g., AS12345 or 12345): ",
         "unknown_ip_asn_skipped": "ASN not provided. Skipping database entry.",
         "unknown_ip_asn_detect_failed": "Could not detect ASN from WHOIS.",
+        "unknown_asn_not_in_db": "ASN is not in the local database — querying WHOIS for this autonomous system…",
+        "unknown_asn_whois_title": "WHOIS (aut-num)",
+        "unknown_asn_as_name": "AS name: ",
+        "unknown_asn_probing": "Sampling up to {n} IP(s) from WHOIS routes for geo check…",
+        "unknown_asn_no_prefixes": "No IPv4 route/inetnum found in WHOIS to sample automatically.",
+        "unknown_asn_sample_ip_prompt": "Enter any IPv4 from this operator's network (or press Enter to skip): ",
+        "unknown_asn_add_offer": "Add this ASN to the local database using the data above? (y/n): ",
+        "unknown_asn_added": "✓ ASN entry added to the database",
+        "unknown_asn_add_skipped": "ASN was not added to the database.",
+        "unknown_asn_invalid": "Invalid ASN. Use e.g. AS12389 or 12389.",
         "db_update_prompt": "Database update check is required - last check was ",
         "db_update_prompt_days": " days ago. Update now? (y/n): ",
         "db_update_success": "Database updated",
@@ -283,6 +293,16 @@ TRANSLATIONS = {
         "unknown_ip_asn_prompt": "Введите ASN (например, AS12345 или 12345): ",
         "unknown_ip_asn_skipped": "ASN не предоставлен. Пропуск добавления в БД.",
         "unknown_ip_asn_detect_failed": "Не удалось определить ASN из WHOIS.",
+        "unknown_asn_not_in_db": "ASN нет в локальной базе — запрос WHOIS по autonomous system…",
+        "unknown_asn_whois_title": "WHOIS (aut-num)",
+        "unknown_asn_as_name": "Имя AS: ",
+        "unknown_asn_probing": "Проверка до {n} IP из маршрутов WHOIS (геолокация)…",
+        "unknown_asn_no_prefixes": "В ответе WHOIS не найдены IPv4 route/inetnum для автоматической выборки.",
+        "unknown_asn_sample_ip_prompt": "Введите любой IPv4 из сети этого оператора (или Enter — пропустить): ",
+        "unknown_asn_add_offer": "Добавить этот ASN в локальную БД по полученным данным? (y/n): ",
+        "unknown_asn_added": "✓ Запись ASN добавлена в базу",
+        "unknown_asn_add_skipped": "ASN не добавлен в базу.",
+        "unknown_asn_invalid": "Неверный формат ASN. Укажите, например: AS12389 или 12389.",
         "db_update_prompt": "Нужно проверить обновление базы - последняя проверка ",
         "db_update_prompt_days": " дней назад. Обновить сейчас? (y/n): ",
         "db_update_success": "База обновлена",
@@ -1288,12 +1308,17 @@ def offer_network_tools_menu(target_ip: str) -> None:
         else:
             print(f"{Colors.WARNING}{t('tools_invalid')}{Colors.ENDC}")
 
-def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[str] = None) -> Optional[Dict]:
-    """Get WHOIS data for an IP address"""
+def _run_whois_raw_query(
+    target: str,
+    *,
+    whois_server: Optional[str] = None,
+    timeout_seconds: int = 20,
+) -> Dict:
+    """Run system ``whois`` for an IP or ``AS`` object. Returns ok+stdout or error dict."""
     try:
-        cmd = ['whois', ip]
+        cmd: List[str] = ["whois", target]
         if whois_server:
-            cmd = ['whois', '-h', whois_server, ip]
+            cmd = ["whois", "-h", whois_server, "--", target]
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
@@ -1305,7 +1330,7 @@ def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[st
 
         show_timer = sys.stdout.isatty()
         start_time = time.monotonic()
-        last_remaining = None
+        last_remaining: Optional[int] = None
 
         while process.poll() is None:
             elapsed = time.monotonic() - start_time
@@ -1320,10 +1345,10 @@ def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[st
 
             if elapsed >= timeout_seconds:
                 process.kill()
-                stdout, stderr = process.communicate()
                 if show_timer:
                     print()
-                return {'error': f'timeout after {timeout_seconds}s'}
+                process.communicate()
+                return {"error": f"timeout after {timeout_seconds}s"}
 
             time.sleep(0.2)
 
@@ -1331,14 +1356,28 @@ def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[st
         if show_timer:
             print("\r" + " " * 60 + "\r", end="", flush=True)
 
-        result = subprocess.CompletedProcess(
-            args=cmd,
-            returncode=process.returncode,
-            stdout=stdout,
-            stderr=stderr
-        )
-        whois_text = result.stdout
-        
+        return {
+            "ok": True,
+            "stdout": stdout or "",
+            "stderr": stderr or "",
+            "returncode": process.returncode,
+        }
+    except FileNotFoundError:
+        return {"error": "whois command not found"}
+    except OSError as exc:
+        return {"error": str(exc)}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[str] = None) -> Optional[Dict]:
+    """Get WHOIS data for an IP address"""
+    try:
+        raw = _run_whois_raw_query(ip, whois_server=whois_server, timeout_seconds=timeout_seconds)
+        if raw.get("error"):
+            return raw
+        whois_text = raw["stdout"]
+
         asn = None
         country = None
         org = None
@@ -1413,6 +1452,344 @@ def get_whois_data(ip: str, timeout_seconds: int = 20, whois_server: Optional[st
         return {'error': str(exc)}
     except Exception as exc:
         return {'error': str(exc)}
+
+
+def normalize_asn_key(raw: str) -> Optional[str]:
+    """Return canonical ``AS<number>`` or None if the string is not a plain ASN."""
+    s = (raw or "").strip().upper().replace(" ", "")
+    num = s[2:] if s.startswith("AS") else s
+    if not num.isdigit():
+        return None
+    return f"AS{int(num)}"
+
+
+def _ipv4_first_probe_host(net: ipaddress.IPv4Network) -> str:
+    if net.num_addresses <= 1:
+        return str(net.network_address)
+    return str(net.network_address + 1)
+
+
+def extract_ipv4_probe_ips_from_asn_whois(whois_text: str, limit: int = 8) -> List[str]:
+    """Pick a few IPv4 addresses from route / inetnum lines in an ASN WHOIS dump."""
+    out: List[str] = []
+    seen: set[str] = set()
+    text = whois_text or ""
+
+    for m in re.finditer(
+        r"(?im)^\s*route:\s*(\d{1,3}(?:\.\d{1,3}){3}/\d{1,2})\s*$",
+        text,
+    ):
+        try:
+            net = ipaddress.ip_network(m.group(1).strip(), strict=False)
+            if isinstance(net, ipaddress.IPv4Network):
+                h = _ipv4_first_probe_host(net)
+                if h not in seen:
+                    seen.add(h)
+                    out.append(h)
+        except ValueError:
+            continue
+        if len(out) >= limit:
+            return out
+
+    for m in re.finditer(
+        r"(?im)^\s*(?:inetnum|netrange):\s*(\d{1,3}(?:\.\d{1,3}){3})\s*-\s*(\d{1,3}(?:\.\d{1,3}){3})\s*$",
+        text,
+    ):
+        try:
+            a = ipaddress.ip_address(m.group(1).strip())
+            if isinstance(a, ipaddress.IPv4Address):
+                h = str(a)
+                if h not in seen:
+                    seen.add(h)
+                    out.append(h)
+        except ValueError:
+            continue
+        if len(out) >= limit:
+            break
+
+    return out[:limit]
+
+
+def first_ipv4_route_cidr_from_asn_whois(whois_text: str) -> Optional[str]:
+    m = re.search(r"(?im)^\s*route:\s*(\d{1,3}(?:\.\d{1,3}){3}/\d{1,2})\s*$", whois_text or "")
+    return m.group(1).strip() if m else None
+
+
+def _ripe_inverse_routes_for_asn(asn_key: str, timeout_seconds: int = 15) -> str:
+    """RIPE Database inverse: IPv4 ``route`` objects announcing this ``AS``."""
+    raw = _run_whois_raw_query(
+        f"-i origin {asn_key}",
+        whois_server="whois.ripe.net",
+        timeout_seconds=timeout_seconds,
+    )
+    if raw.get("ok"):
+        return raw.get("stdout") or ""
+    return ""
+
+
+def _default_ipv4_pool_from_ip(ip: str) -> str:
+    addr = ipaddress.ip_address(ip)
+    if isinstance(addr, ipaddress.IPv4Address):
+        first = str(addr).split(".")[0]
+        return f"{first}.0.0.0/8"
+    return f"{ip}/128"
+
+
+def get_whois_asn_data(
+    asn_raw: str,
+    timeout_seconds: int = 25,
+    whois_server: Optional[str] = None,
+) -> Dict:
+    """WHOIS lookup for an autonomous system (``AS`` + digits only)."""
+    asn_key = normalize_asn_key(asn_raw)
+    if not asn_key:
+        return {"error": "invalid ASN format"}
+
+    raw = _run_whois_raw_query(asn_key, whois_server=whois_server, timeout_seconds=timeout_seconds)
+    if raw.get("error"):
+        return raw
+
+    whois_text = raw["stdout"]
+    if not whois_text.strip():
+        return {"error": "empty whois response"}
+
+    referred_server: Optional[str] = None
+    for line in whois_text.split("\n"):
+        line_lower = line.lower()
+        if referred_server is None and (
+            "refer:" in line_lower
+            or "whois:" in line_lower
+            or "referralserver:" in line_lower
+        ):
+            parts = line.split(":", 1)
+            if len(parts) > 1:
+                candidate = parts[1].strip()
+                if candidate and not candidate.lower().startswith("http"):
+                    referred_server = candidate.split()[0].strip()
+
+    inferred_server = whois_server or referred_server
+    if referred_server and not whois_server:
+        raw2 = _run_whois_raw_query(
+            asn_key,
+            whois_server=referred_server,
+            timeout_seconds=max(8, timeout_seconds - 4),
+        )
+        if raw2.get("ok") and (raw2.get("stdout") or "").strip():
+            whois_text = f"{whois_text}\n\n{raw2['stdout']}"
+            inferred_server = referred_server
+
+    aut_num: Optional[str] = None
+    as_name: Optional[str] = None
+    org: Optional[str] = None
+    country: Optional[str] = None
+
+    aut_re = re.compile(r"(?im)^aut-num:\s*AS?(\d+)\s*$")
+    asname_re = re.compile(r"(?im)^as-name:\s*(.+)\s*$")
+    orgname_re = re.compile(r"(?im)^org-name:\s*(.+)\s*$")
+    org_arin_re = re.compile(r"(?im)^organization:\s*(.+)\s*$")
+    owner_re = re.compile(r"(?im)^owner:\s*(.+)\s*$")
+    netname_re = re.compile(r"(?im)^netname:\s*(.+)\s*$")
+
+    for line in whois_text.split("\n"):
+        m = aut_re.match(line.strip())
+        if m:
+            aut_num = f"AS{int(m.group(1))}"
+            continue
+        m = asname_re.match(line.strip())
+        if m and not as_name:
+            as_name = m.group(1).strip()
+            continue
+        m = orgname_re.match(line.strip())
+        if m and not org:
+            org = m.group(1).strip()
+            continue
+        m = org_arin_re.match(line.strip())
+        if m and not org:
+            org = m.group(1).strip()
+            continue
+        m = owner_re.match(line.strip())
+        if m and not org:
+            org = m.group(1).strip()
+            continue
+        m = netname_re.match(line.strip())
+        if m and not org:
+            org = m.group(1).strip()
+            continue
+        line_lower = line.lower()
+        if "country:" in line_lower:
+            parts = line.split(":", 1)
+            if len(parts) > 1:
+                cc = parts[1].strip().split()[0][:2].upper()
+                if len(cc) == 2 and cc.isalpha():
+                    country = cc
+
+    if re.search(r"(?i)no match( found)?|not found in the database", whois_text) and not aut_num:
+        return {"error": "ASN not found in WHOIS registry response"}
+
+    display_org = org or as_name
+    rir = infer_rir_from_whois_server(inferred_server)
+    return {
+        "asn": aut_num or asn_key,
+        "as_name": as_name,
+        "org": display_org,
+        "country": country,
+        "whois_text": whois_text,
+        "whois_server": inferred_server,
+        "rir": rir,
+    }
+
+
+def _country_display_name_from_db(database: Dict, code: Optional[str]) -> str:
+    if not code:
+        return "Unknown"
+    meta = database.get("metadata", {}).get("countries", {}).get(code.upper(), {})
+    return str(meta.get("name") or code.upper())
+
+
+def investigate_unknown_asn(asn_input: str, database: Dict, *, interactive: bool) -> List[Dict]:
+    """
+    When an ASN is missing from ``asn_database.json``: WHOIS aut-num, sample geo via ip-api,
+    optional add to the local database (TTY only).
+    """
+    asn_key = normalize_asn_key(asn_input)
+    if not asn_key:
+        print(f"{Colors.FAIL}{t('unknown_asn_invalid')}{Colors.ENDC}")
+        return []
+
+    print(f"\n{Colors.OKCYAN}{t('unknown_asn_not_in_db')}{Colors.ENDC}")
+
+    w = get_whois_asn_data(asn_key)
+    if w.get("error"):
+        print(f"{Colors.FAIL}{t('unknown_ip_whois_failed')}{Colors.ENDC}")
+        print(f"{Colors.WARNING}{t('unknown_ip_whois_error')}{w['error']}{Colors.ENDC}")
+        return []
+
+    print(f"\n{Colors.HEADER}{'='*60}{Colors.ENDC}")
+    print(f"{Colors.BOLD}{t('unknown_asn_whois_title')}{Colors.ENDC} {w.get('asn')}")
+    if w.get("as_name"):
+        print(f"{Colors.OKCYAN}{t('unknown_asn_as_name')}{Colors.ENDC}{w['as_name']}")
+    if w.get("org"):
+        print(f"{Colors.OKCYAN}{t('unknown_ip_detected_org')}{Colors.ENDC}{w['org']}")
+    if w.get("country"):
+        cname = _country_display_name_from_db(database, w.get("country"))
+        print(f"{Colors.OKCYAN}{t('unknown_ip_detected_country')}{Colors.ENDC}{w['country']} ({cname})")
+    if w.get("rir"):
+        print(f"{Colors.OKCYAN}RIR:{Colors.ENDC} {w['rir']}")
+
+    whois_blob = w.get("whois_text") or ""
+    probe_ips = extract_ipv4_probe_ips_from_asn_whois(whois_blob, limit=8)
+
+    if not probe_ips:
+        blob_lower = whois_blob.lower()
+        srv = (w.get("whois_server") or "").lower()
+        if "ripe" in blob_lower or "ripe" in srv:
+            extra = _ripe_inverse_routes_for_asn(asn_key)
+            if extra.strip():
+                whois_blob = whois_blob + "\n\n" + extra
+                w["whois_text"] = whois_blob
+                probe_ips = extract_ipv4_probe_ips_from_asn_whois(whois_blob, limit=8)
+
+    if not probe_ips:
+        print(f"{Colors.WARNING}{t('unknown_asn_no_prefixes')}{Colors.ENDC}")
+        if interactive and sys.stdin.isatty() and sys.stdout.isatty():
+            try:
+                manual = input(f"{Colors.OKCYAN}{t('unknown_asn_sample_ip_prompt')}{Colors.ENDC}").strip()
+            except (EOFError, KeyboardInterrupt):
+                manual = ""
+            if manual:
+                try:
+                    ipaddress.ip_address(manual)
+                    probe_ips = [manual]
+                except ValueError:
+                    print(f"{Colors.WARNING}{t('invalid_ip')} {manual}{Colors.ENDC}")
+
+    results: List[Dict] = []
+    if probe_ips:
+        n = min(3, len(probe_ips))
+        print(f"\n{Colors.OKCYAN}{t('unknown_asn_probing').format(n=n)}{Colors.ENDC}")
+        for ip in probe_ips[:3]:
+            results.append(
+                check_single_ip(
+                    ip,
+                    database,
+                    auto_reclass=False,
+                    interactive_extras=False,
+                    invoke_unknown_ip_flow=False,
+                )
+            )
+
+    results_ok = [r for r in results if r and not r.get("error")]
+
+    auth = assess_data_authenticity(
+        geo_country=(results_ok[0].get("actual_country") if results_ok else None),
+        whois_country=w.get("country"),
+        whois_rir=w.get("rir"),
+    )
+    if results_ok:
+        if auth["ok"]:
+            print(f"{Colors.OKGREEN}{t('auth_check_title')}{t('auth_check_ok')}{Colors.ENDC}")
+        else:
+            warn_text = f"{t('auth_check_title')}{'; '.join(auth['warnings'])}"
+            print(f"{Colors.WHITE}{Colors.BGRED}{warn_text}{Colors.ENDC}")
+
+    if not interactive or not (sys.stdin.isatty() and sys.stdout.isatty()):
+        return results_ok
+
+    print(f"\n{Colors.WARNING}{t('unknown_asn_add_offer')}{Colors.ENDC}", end="")
+    try:
+        add_choice = input().strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        add_choice = "n"
+
+    if add_choice != "y":
+        print(f"{Colors.OKCYAN}{t('unknown_asn_add_skipped')}{Colors.ENDC}")
+        return results_ok
+
+    route_cidr = first_ipv4_route_cidr_from_asn_whois(w.get("whois_text") or "")
+    pool: Optional[str] = route_cidr
+    anchor_ip: Optional[str] = None
+
+    if results_ok:
+        ip0 = results_ok[0].get("ip")
+        if ip0:
+            anchor_ip = str(ip0)
+        if not pool and anchor_ip:
+            pool = _default_ipv4_pool_from_ip(anchor_ip)
+    elif probe_ips:
+        anchor_ip = probe_ips[0]
+        if not pool:
+            pool = _default_ipv4_pool_from_ip(anchor_ip)
+    elif route_cidr:
+        try:
+            net = ipaddress.ip_network(route_cidr, strict=False)
+            if isinstance(net, ipaddress.IPv4Network):
+                anchor_ip = _ipv4_first_probe_host(net)
+                pool = route_cidr
+        except ValueError:
+            pass
+
+    if not pool or not anchor_ip:
+        print(f"{Colors.FAIL}{t('unknown_asn_add_skipped')}{Colors.ENDC} ({t('unknown_asn_no_prefixes')})")
+        return results_ok
+
+    cc = (results_ok[0].get("actual_country") if results_ok else None) or w.get("country")
+    if not cc:
+        print(f"{Colors.FAIL}{t('unknown_asn_add_skipped')}{Colors.ENDC} (no country from WHOIS/geo)")
+        return results_ok
+
+    cname = (
+        (results_ok[0].get("actual_country_name") if results_ok else None)
+        or _country_display_name_from_db(database, cc)
+    )
+    org = w.get("org") or w.get("as_name") or asn_key
+
+    if update_database_entry(database, anchor_ip, asn_key, cc, cname, pool, org):
+        print(f"{Colors.OKGREEN}{t('unknown_asn_added')}{Colors.ENDC}")
+    else:
+        print(f"{Colors.FAIL}{t('unknown_ip_not_added')}{Colors.ENDC}")
+
+    return results_ok
+
 
 def assess_data_authenticity(
     geo_country: Optional[str],
@@ -1656,6 +2033,7 @@ def check_single_ip(
     database: Dict,
     auto_reclass: bool = False,
     interactive_extras: bool = True,
+    invoke_unknown_ip_flow: bool = True,
 ) -> Dict:
     """Check a single IP address. When ``interactive_extras`` is True, show abuse (WHOIS) and optional tool menu."""
     print(f"\n{Colors.OKCYAN}{t('checking')}{ip}{Colors.ENDC}")
@@ -1762,9 +2140,10 @@ def check_single_ip(
         print(f"{Colors.WARNING}{t('ip_not_found')}{Colors.ENDC}")
         result['status'] = 'not_in_database'
 
-        # If IP is not in local pools, immediately run WHOIS report flow.
-        print(f"{Colors.OKCYAN}{t('unknown_ip_no_local_data')}{Colors.ENDC}")
-        handle_unknown_ip(ip, result, database, interactive_extras=interactive_extras)
+        if invoke_unknown_ip_flow:
+            # If IP is not in local pools, run WHOIS report flow (interactive add).
+            print(f"{Colors.OKCYAN}{t('unknown_ip_no_local_data')}{Colors.ENDC}")
+            handle_unknown_ip(ip, result, database, interactive_extras=interactive_extras)
     if best_matches:
         result['status'] = 'checked'
 
@@ -2035,8 +2414,8 @@ def check_asn_operator(asn_input: str, database: Dict, auto_reclass: bool = Fals
     asn_data = next((a for a in database['asn_data'] if a['asn'].upper() == asn_query.upper()), None)
 
     if not asn_data:
-        print(f"{Colors.FAIL}❌ ASN not found{Colors.ENDC}")
-        return []
+        tty = sys.stdin.isatty() and sys.stdout.isatty()
+        return investigate_unknown_asn(asn_input, database, interactive=tty)
 
     print(f"\n{Colors.OKCYAN}Checking ASN: {asn_query}{Colors.ENDC}")
     print(f"  Owner: {asn_data['owner']}")
@@ -2051,6 +2430,7 @@ def check_asn_operator(asn_input: str, database: Dict, auto_reclass: bool = Fals
                 database,
                 auto_reclass=auto_reclass,
                 interactive_extras=False,
+                invoke_unknown_ip_flow=False,
             )
             results.append(result)
         except ValueError:
@@ -2468,24 +2848,25 @@ def main():
                         results = []
                         for pool in asn_data['ip_pools'][:3]:
                             try:
-                                network = ipaddress.ip_network(pool)
+                                network = ipaddress.ip_network(pool, strict=False)
                                 result = check_single_ip(
                                     str(network.network_address),
                                     database,
                                     interactive_extras=False,
+                                    invoke_unknown_ip_flow=False,
                                 )
                                 results.append(result)
-                            except:
+                            except Exception:
                                 pass
                         
                         if results:
                             show_summary(results)
                             offer_save_report(results)
                     else:
-                        if CURRENT_LANGUAGE == "ru":
-                            print(f"{Colors.FAIL}❌ ASN не найден{Colors.ENDC}")
-                        else:
-                            print(f"{Colors.FAIL}❌ ASN not found{Colors.ENDC}")
+                        results = investigate_unknown_asn(asn_input, database, interactive=True)
+                        if results:
+                            show_summary(results)
+                            offer_save_report(results)
             except KeyboardInterrupt:
                 continue
 
@@ -2574,7 +2955,7 @@ def show_help():
         
         print(f"{Colors.OKCYAN}3. Проверить ASN оператора{Colors.ENDC}")
         print("   Введите ASN (например: AS12389 или 12389)")
-        print("   Проверяет все пулы IP этого оператора\n")
+        print("   Если ASN есть в базе — проверка по пулам; если нет — WHOIS и выборочная геопроверка\n")
 
         print(f"{Colors.OKCYAN}4. Диагностика сети{Colors.ENDC}")
         print("   Монитор задержки по хопам маршрута и быстрый HTTP speed test;\n")
@@ -2619,7 +3000,7 @@ def show_help():
         
         print(f"{Colors.OKCYAN}3. Check ASN operator{Colors.ENDC}")
         print("   Enter ASN (e.g.: AS12389 or 12389)")
-        print("   Checks all IP pools for this operator\n")
+        print("   If the ASN is in the DB — checks pools; if not — WHOIS + sampled geo checks\n")
 
         print(f"{Colors.OKCYAN}4. Network diagnostics{Colors.ENDC}")
         print("   Multi-hop latency monitor (route over time) and HTTP speed test;\n")
