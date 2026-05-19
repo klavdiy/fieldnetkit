@@ -592,6 +592,7 @@ def _tls_handshake(
     if not verify:
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     try:
         with socket.create_connection((host, port), timeout=timeout) as raw:
             with ctx.wrap_socket(raw, server_hostname=sni) as ssock:
@@ -629,6 +630,7 @@ def _tls_probe_legacy(
     ctx.maximum_version = ver
     try:
         with socket.create_connection((host, port), timeout=timeout) as raw:
+            # codeql[py/insecure-protocol] intentional legacy TLS probe for security audit
             with ctx.wrap_socket(raw, server_hostname=sni) as ssock:
                 cipher = ssock.cipher()
                 return {
