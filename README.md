@@ -38,7 +38,7 @@
 | [**3**](#пункт-3--asn-оператора) | ASN | Пулы из БД или разведка неизвестного ASN |
 | [**4**](#пункт-4--диагностика-сети) | Диагностика | Speed-test, trace, PCAP — см. [подменю 4](#подменю-4--диагностика-сети) |
 | [**5**](#пункт-5--сетевые-интерфейсы) | NIC | Список интерфейсов ОС |
-| [**6**](#пункт-6--обновить-базу) | База | Метаданные `asn_database.json` |
+| [**6**](#пункт-6--обновить-базу) | База | Обслуживание `data/asn_database.json` |
 | [**7**](#пункт-7--api-ключи-обогащения) | Enrichment | MaxMind, IP2Location |
 | [**8**](#пункт-8--язык) | Язык | RU / EN |
 | [**9**](#пункт-9--справка) | Справка | Краткая помощь в TUI |
@@ -71,7 +71,7 @@
 |---|---|
 | [CLI (все режимы)](#cli-все-режимы) | Правила запуска, deps, Actions, PowerShell |
 | [Справочник CLI — все флаги](#справочник-cli--все-флаги) | Полная таблица аргументов |
-| [Форматы JSON-файлов](#форматы-json-файлов) | `scan_results`, trace, dns, owasp, база |
+| [Форматы JSON-файлов](#форматы-json-файлов) | `data/scan_results`, сессии, база ASN |
 
 ### Справка и проект
 
@@ -109,7 +109,7 @@ Windows:
 .\fnkit.ps1 -i 8.8.8.8
 ```
 
-При первом интерактивном запуске выберите язык (**English** / **Русский**). Сохраняется в `.language_config`.
+При первом интерактивном запуске выберите язык (**English** / **Русский**). Сохраняется в `data/config/.language_config`. При первом запуске `paths.py` переносит старые файлы из корня репозитория (`asn_database.json`, `trace_sessions/`, …) в `data/`.
 
 При старте в рамке показывается **ваш публичный egress IP** (через ip-api) — baseline «откуда идёт трафик».
 
@@ -172,17 +172,22 @@ fieldnetkit/
 │   ├── pcap_diag.py         # PCAP capture / show / verify
 │   ├── dns_diag.py          # DNS-граф, crt.sh, HTML export
 │   ├── owasp_toolkit.py     # Secure Headers, Amass, TLS, takeover
+│   ├── subdomain_takeover.py # CNAME / HTTP fingerprints (после Amass)
 │   ├── pdns_lookup.py       # Passive DNS
 │   ├── ip_egress_check.py   # Tor / proxy / datacenter
 │   └── ptr_scan.py          # PTR range scan
-├── data/                    # Базы и артефакты рантайма
+├── data/                    # Базы и артефакты рантайма (см. paths.py)
 │   ├── asn_database.json    # ASN / пулы / expected country
 │   ├── scan_results.json    # при -s/--save (gitignore)
-│   ├── config/              # .language_config, enrichment keys
-│   ├── sessions/            # owasp, dns, trace, ptr (gitignore)
+│   ├── config/              # .language_config, .enrichment_config.json (gitignore)
+│   ├── sessions/
+│   │   ├── trace/           # trace monitor JSON (gitignore)
+│   │   ├── dns/             # DNS crawl JSON (gitignore)
+│   │   ├── owasp/           # OWASP pipeline JSON (gitignore)
+│   │   └── ptr/             # PTR sweep JSON (gitignore)
 │   ├── dns_graph/           # HTML DNS (gitignore)
-│   ├── pcap/                # PCAP (gitignore)
-│   └── cache/               # Tor list cache (gitignore)
+│   ├── pcap/                # PCAP captures (gitignore)
+│   └── cache/tor/           # Tor exit list cache (gitignore)
 ├── scripts/                 # check_deps, validate_asn_db, install-deps
 ├── tools/                   # generate_sbom.py
 ├── docs/                    # SBOM, OWASP
@@ -226,19 +231,19 @@ pip install -r requirements-dns.txt -r requirements-optional.txt
 | **3** | ASN | Проверка пулов из БД или разведка неизвестного ASN |
 | **4** | Диагностика сети | Speed-test, trace monitor, PCAP |
 | **5** | Интерфейсы | Список NIC из ОС |
-| **6** | Обновить базу | Метаданные БД (см. ограничения) |
+| **6** | Обновить базу | Dedupe, prune `/20+`, validate `data/asn_database.json` |
 | **7** | Enrichment keys | MaxMind / IP2Location / VirusTotal |
 | **8** | Язык | RU / EN |
 | **9** | Справка | Краткие подсказки в TUI |
 | **10** | DNS | Граф, crt.sh, HTML, PCAP→DNS |
 | **11** | OWASP | Headers, Amass, Nettacker, WSTG |
-| **0** | Выход | Завершение без сохранения состояния (кроме уже записанных `.language_config` / сессий) |
+| **0** | Выход | Завершение без сохранения состояния (кроме уже записанных `data/config/` и `data/sessions/`) |
 
 ---
 
 ## Пункт 0 — Выход
 
-Введите **`0`** в главном меню. Корректное завершение цикла; несохранённые отчёты (если вы ответили `n` на «Save report») не попадают в `scan_results.json`.
+Введите **`0`** в главном меню. Корректное завершение цикла; несохранённые отчёты (если вы ответили `n` на «Save report») не попадают в `data/scan_results.json`.
 
 ---
 
@@ -246,20 +251,20 @@ pip install -r requirements-dns.txt -r requirements-optional.txt
 
 ### Назначение
 
-Сверить **фактическую** геолокацию IP (ip-api) с **ожидаемой** страной из локальной базы для совпавшего ASN/пула, с **текущим BGP origin** (Team Cymru) и с **passive / historical DNS** (кто ещё «сидел» на этом IP, как менялся origin). Статический `asn_database.json` и текущая geo не видят ротацию адресов — для этого:
+Сверить **фактическую** геолокацию IP (ip-api) с **ожидаемой** страной из локальной базы для совпавшего ASN/пула, с **текущим BGP origin** (Team Cymru) и с **passive / historical DNS** (кто ещё «сидел» на этом IP, как менялся origin). Статический `data/asn_database.json` и текущая geo не видят ротацию адресов — для этого:
 
 | Источник | Ключ | Что даёт |
 |----------|------|----------|
 | **RIPE Stat** | не нужен | `dns-chain` (текущие PTR/forward), `routing-history` (смена origin ASN по префиксам) |
 | **VirusTotal** | меню **7** или `VIRUSTOTAL_API_KEY` | Исторические hostname → IP (resolutions) |
-| **SecurityTrails** | `SECURITYTRAILS_API_KEY` в `.enrichment_config.json` | История A-записей на IP (опционально) |
+| **SecurityTrails** | `SECURITYTRAILS_API_KEY` в `data/config/.enrichment_config.json` | История A-записей на IP (опционально) |
 
 **Egress / NAT** (ответ «за NAT или чистый IP?») — сразу после geo:
 
 | Сигнал | Источник |
 |--------|----------|
 | `proxy` / `hosting` / `mobile` | ip-api (в том же запросе, что и geo) |
-| Tor exit | [check.torproject.org](https://check.torproject.org/torbulkexitlist) (кэш в `.cache/`, ~6 ч) |
+| Tor exit | [check.torproject.org](https://check.torproject.org/torbulkexitlist) (кэш в `data/cache/tor/`, ~6 ч) |
 | `bogon` | ipinfo.io (опционально `IPINFO_TOKEN`) |
 | ISP vs datacenter ASN | эвристика по имени org/ISP/AS |
 
@@ -321,7 +326,7 @@ Would you like to reclassify this ASN? (y/n):
 Выберите опцию (0-11): 1
 IP: 8.8.8.8
 … (отчёт) …
-Save this report to scan_results.json? (y/n): n
+Save this report to data/scan_results.json? (y/n): n
 
 Additional network tools (checked IP): 8.8.8.8
 1. nmap (run with -A -T4)
@@ -341,7 +346,7 @@ python3 fnkit.py -i 8.8.8.8 --no-bgp          # без live BGP (быстрее)
 | Флаг | Описание |
 |------|----------|
 | `-i` / `--ip` | Один адрес |
-| `-s` / `--save` | Запись в `scan_results.json` |
+| `-s` / `--save` | Запись в `data/scan_results.json` |
 | `--auto-reclass` | Без интерактивных `y/n` при переклассификации |
 | `--quiet` | Только с `--auto-reclass` — минимум вывода |
 | `--bgp` | Включить live BGP origin (Team Cymru); по умолчанию **вкл.** для `-i` / `-a` |
@@ -392,7 +397,7 @@ Add this information to the database? (y/n):
 1. Меню → **`2`**
 2. **Start IP** и **End IP**
 3. Режим: **`1`** — geo по БД (до **10** IP), **`2`** — PTR sweep (до **256** IP, rate-limit, по умолчанию 10 qps)
-4. Сводка и опциональное сохранение (`ptr_sessions/*.json` для режима 2)
+4. Сводка и опциональное сохранение (`data/sessions/ptr/*.json` для режима 2)
 
 ### Пример вывода
 
@@ -413,7 +418,7 @@ Total IPs checked: 5
 Matches (location correct): 3
 Mismatches (location incorrect): 2
 
-Save this report to scan_results.json? (y/n):
+Save this report to data/scan_results.json? (y/n):
 ```
 
 ### CLI
@@ -436,7 +441,7 @@ python3 fnkit.py -r 192.168.1.1 192.168.1.50 --ptr-scan --ptr-qps 15 --max-ips 5
 | `--no-pdns` | — | Без passive DNS |
 | `--ptr-scan` | — | Только PTR-обход диапазона (не geo-цикл) |
 | `--ptr-qps` | 10 | Лимит PTR-запросов/сек |
-| `--ptr-save` | — | JSON в `ptr_sessions/` |
+| `--ptr-save` | — | JSON в `data/sessions/ptr/` |
 
 > В интерактивном меню: режим **1** — до 10 IP geo; режим **2** — до 256 PTR. В CLI `--max-ips` задаёт лимит для обоих режимов. BGP/pDNS/egress для обычного `-r` выключены по умолчанию.
 
@@ -540,7 +545,7 @@ Results are approximate; ISP routing may vary.
 2. **Параллельный** `ping` всех хопов каждый раунд (MTR-style — не последовательно)  
 3. В **TTY** — таблица в одном окне; без TTY — накопительный лог  
 4. Клавиши: **`p`** пауза, **`q`** или **Ctrl+C** стоп  
-5. После остановки — предложение сохранить JSON в `trace_sessions/` (формат `fnkit_trace_v1`; читаются и старые `ip_checker_trace_v1`)
+5. После остановки — предложение сохранить JSON в `data/sessions/trace/` (формат `fnkit_trace_v1`; читаются и старые `ip_checker_trace_v1`)
 
 **Пример (меню):** `4` → `2` → хост `8.8.8.8`
 
@@ -575,28 +580,28 @@ Keys: p pause · q stop
 ```text
 Session stopped.
 Save this session (12 rounds) to JSON for later replay? (y/n): y
-File path [Enter = trace_sessions/trace_8.8.8.8_20260519T120000Z.json]:
-Saved: trace_sessions/trace_8.8.8.8_20260519T120000Z.json
+File path [Enter = data/sessions/trace/trace_8.8.8.8_20260519T120000Z.json]:
+Saved: data/sessions/trace/trace_8.8.8.8_20260519T120000Z.json
 ```
 
 ### 4.3 — Воспроизведение trace
 
-1. `4` → `3` → выбор файла из `trace_sessions/` или путь  
+1. `4` → `3` → выбор файла из `data/sessions/trace/` или путь  
 2. После просмотра: **`r`** — повтор, **`q`** — назад
 
 ```bash
-python3 fnkit.py --trace-replay trace_sessions/trace_8.8.8.8_20260510.json --trace-replay-delay 0
+python3 fnkit.py --trace-replay data/sessions/trace/trace_8.8.8.8_20260510.json --trace-replay-delay 0
 ```
 
 ### 4.4 — Захват PCAP
 
 1. `4` → `4`  
-2. Интерфейс (`en0`, `eth0`…), путь `.pcap` (Enter = `network capture/capture_YYYYMMDD_HHMMSS.pcap`)  
+2. Интерфейс (`en0`, `eth0`…), путь `.pcap` (Enter = `data/pcap/capture_YYYYMMDD_HHMMSS.pcap`)  
 3. Длительность (сек), опционально **BPF** (`tcp port 443`)  
 4. Часто нужны **`sudo`** / разрешения macOS
 
 ```bash
-sudo python3 fnkit.py --pcap-capture en0 --pcap-out "./network capture/test.pcap" \
+sudo python3 fnkit.py --pcap-capture en0 --pcap-out "./data/pcap/test.pcap" \
   --pcap-seconds 15 --pcap-filter 'tcp port 443'
 ```
 
@@ -605,14 +610,14 @@ sudo python3 fnkit.py --pcap-capture en0 --pcap-out "./network capture/test.pcap
 Проверка заголовка (classic/PCAPNG), SHA-256, список кадров; hex по запросу.
 
 ```bash
-python3 fnkit.py --pcap-show "./network capture/test.pcap" --pcap-max-packets 120 --pcap-hex
+python3 fnkit.py --pcap-show "./data/pcap/test.pcap" --pcap-max-packets 120 --pcap-hex
 ```
 
 **Пример вывода (4.4, после захвата):**
 
 ```text
 PCAP file check
-  Path: network capture/capture_20260519_120000.pcap
+  Path: data/pcap/capture_20260519_120000.pcap
   Format: classic PCAP (LE microsecond)
   SHA-256: a1b2c3…
   Packets (approx): 1240
@@ -638,7 +643,7 @@ PCAP file check
 
 Главное меню → **`5`** — однократный вывод, возврат в меню.
 
-Зависимости: только Python (модуль `network_diag`).
+Зависимости: только Python (модуль `lib/network_diag.py`).
 
 **Пример вывода:**
 
@@ -658,7 +663,7 @@ utun4              tunnel      up      1380   —                   10.8.0.2
 
 ### Назначение
 
-Обслуживание **`asn_database.json`**: дедупликация ASN (одна строка на номер), удаление грубых пулов (шире `/20`), пересчёт `total_asns` / `total_ip_pools`, отчёт по ASN без рабочих префиксов.
+Обслуживание **`data/asn_database.json`**: дедупликация ASN (одна строка на номер), удаление грубых пулов (шире `/20`), пересчёт `total_asns` / `total_ip_pools`, отчёт по ASN без рабочих префиксов.
 
 ### Автоматическое напоминание (30 / 7 дней)
 
@@ -666,7 +671,7 @@ utun4              tunnel      up      1380   —                   10.8.0.2
 - **`y`** — обновление метаданных  
 - **`n`** — отложить на **7 дней** (`next_update_prompt_after`)
 
-> **Важно:** пункт **не** подтягивает все префиксы из RIR автоматически. Новые `/24+` — через flow **unknown IP / unknown ASN** с BGP (Team Cymru) или `collect_bgp_pools_for_asn`.
+> **Важно:** пункт **6** не подтягивает все префиксы из RIR автоматически. Новые `/24+` — через flow **unknown IP / unknown ASN** с BGP (Team Cymru) или `collect_bgp_pools_for_asn` при проверке IP.
 
 ### Как пользоваться
 
@@ -676,7 +681,7 @@ utun4              tunnel      up      1380   —                   10.8.0.2
 | CLI | `python3 fnkit.py --maintain-db` |
 | Скрипт / CI | `python3 scripts/validate_asn_db.py` (только проверка), `--fix` (запись) |
 
-**Зависимые модули:** только **`fnkit.py`** читает `asn_database.json` (через `load_database()`). `dns_diag`, `owasp_toolkit`, `network_diag` и др. базу не кэшируют — после правки JSON или меню **6** достаточно перезагрузки в том же процессе (`load_database()` при старте или пункт **6** в меню).
+**Зависимые модули:** только **`fnkit.py`** читает `data/asn_database.json` (через `paths.DATABASE_FILE` / `load_database()`). Модули в `lib/` базу не кэшируют — после правки JSON или меню **6** достаточно перезагрузки в том же процессе.
 
 **Пример вывода:**
 
@@ -706,7 +711,7 @@ Database update check is required - last check was 45 days ago. Update now? (y/n
 
 ### Назначение
 
-Сравнение гео **ip-api** (primary) с **MaxMind** и **IP2Location** при наличии ключей. Дополнительно: **VirusTotal API key** (пункт **3**) для passive DNS hostname history. Ключи в `.enrichment_config.json` (не коммитить); для VT также `VIRUSTOTAL_API_KEY` в окружении.
+Сравнение гео **ip-api** (primary) с **MaxMind** и **IP2Location** при наличии ключей. Дополнительно: **VirusTotal API key** (пункт **3**) для passive DNS hostname history. Ключи в `data/config/.enrichment_config.json` (не коммитить); для VT также `VIRUSTOTAL_API_KEY` в окружении.
 
 ### Подменю
 
@@ -750,7 +755,7 @@ Geo enrichment comparison
 
 Меню → **`8`** → `1` English / `2` Русский.
 
-Сохраняется в `.language_config`. Влияет на все строки TUI и подмодули.
+Сохраняется в `data/config/.language_config`. Влияет на все строки TUI и подмодули в `lib/`.
 
 CLI-only режимы (только `--dns`, `--trace-*`, `--owasp-*`) при отсутствии конфига используют **en**.
 
@@ -791,7 +796,7 @@ CLI-only режимы (только `--dns`, `--trace-*`, `--owasp-*`) при о
 2. **crt.sh?** `y` — пассивные поддомены  
 3. Путь к **wordlist** (Enter — без брута)  
 4. Сводка: домены, IP, рёбра, метрики (shared IP, CNAME loops…)  
-5. Сохранить JSON в `dns_sessions/` (`fnkit_dns_v1`)
+5. Сохранить JSON в `data/sessions/dns/` (`fnkit_dns_v1`)
 
 **Пример вывода (10.1):**
 
@@ -808,16 +813,16 @@ Graph metrics
   Domains sharing an IP (top groups):
     93.184.216.34 → www.example.com, example.com
 Save session JSON? (y/n): y
-Session saved: dns_sessions/example_com_20260519T120000Z.json
+Session saved: data/sessions/dns/example_com_20260519T120000Z.json
 ```
 
 ### Пункт 10.2 — Открыть сессию
 
-Меню **10** → **2** → номер файла из `dns_sessions/` или полный путь → таблица узлов и метрики.
+Меню **10** → **2** → номер файла из `data/sessions/dns/` или полный путь → таблица узлов и метрики.
 
 ### Пункт 10.3 — HTML-граф
 
-Меню **10** → **3** → выбор сессии → файл в `dns_graph/`. Откройте `.html` в браузере (vis-network).
+Меню **10** → **3** → выбор сессии → файл в `data/dns_graph/`. Откройте `.html` в браузере (vis-network).
 
 ### Пункт 10.4 — Сравнение резолверов
 
@@ -842,9 +847,9 @@ Domain (e.g. example.com): example.com
 ```bash
 python3 fnkit.py --dns example.com --dns-crtsh --dns-depth 4 --dns-save
 python3 fnkit.py --dns example.com --dns-wordlist ./subdomains.txt --dns-qps 10
-python3 fnkit.py --dns-replay dns_sessions/example_com_*.json
-python3 fnkit.py --dns-replay dns_sessions/sess.json --dns-export dns_graph/graph.html
-python3 fnkit.py --dns-pcap "network capture/cap.pcap" --dns example.com --dns-save
+python3 fnkit.py --dns-replay data/sessions/dns/example_com_*.json
+python3 fnkit.py --dns-replay data/sessions/dns/sess.json --dns-export data/dns_graph/graph.html
+python3 fnkit.py --dns-pcap "data/pcap/cap.pcap" --dns example.com --dns-save
 ```
 
 | Флаг | Default | Описание |
@@ -855,7 +860,7 @@ python3 fnkit.py --dns-pcap "network capture/cap.pcap" --dns example.com --dns-s
 | `--dns-crtsh` | off | crt.sh |
 | `--dns-wordlist` | — | Файл поддоменов |
 | `--dns-qps` | 20 | Rate limit |
-| `--dns-save` | — | JSON в `dns_sessions/` |
+| `--dns-save` | — | JSON в `data/sessions/dns/` |
 | `--dns-replay` | — | Сводка сессии |
 | `--dns-export` | — | HTML-граф |
 | `--dns-pcap` | — | Имена из PCAP → crawl |
@@ -877,7 +882,7 @@ python3 fnkit.py --dns-pcap "network capture/cap.pcap" --dns example.com --dns-s
 | **3** | Amass passive (нужен `amass` в PATH) |
 | **4** | Nettacker port_scan (AGPL, отдельная установка) |
 | **5** | WSTG checklist (только ссылки) |
-| **6** | Список / просмотр `owasp_sessions/*.json` |
+| **6** | Список / просмотр `data/sessions/owasp/*.json` |
 | **7** | Legal notice |
 | **0** | Назад |
 
@@ -937,7 +942,7 @@ Checked 87 hosts, CNAME on 12, suspects: 1
   [!] dev.example.com → foo.github.io (GitHub Pages): HTTP fingerprint: there isn't a github pages site here
 ```
 
-**Пример (11.1 pipeline):** headers → TLS → Amass → **takeover по списку Amass** → WSTG → JSON в `owasp_sessions/`.
+**Пример (11.1 pipeline):** headers → TLS → Amass → **takeover по списку Amass** → WSTG → JSON в `data/sessions/owasp/`.
 
 Подробнее: [docs/OWASP_INTEGRATION.md](docs/OWASP_INTEGRATION.md).
 
@@ -996,7 +1001,7 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 | `quiet` | `--quiet` (только с `auto_reclass=true`) |
 | `max_ips` | `--max-ips N` |
 
-Артефакт: `scan_results.json` при `save=true`.
+Артефакт: `data/scan_results.json` при `save=true`.
 
 ### PowerShell — сводка команд
 
@@ -1018,7 +1023,7 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 | `-i`, `--ip` | Geo | Один IP |
 | `-r START END`, `--range` | Geo | Диапазон |
 | `-a`, `--asn` | Geo | ASN |
-| `-s`, `--save` | Geo | `scan_results.json` |
+| `-s`, `--save` | Geo | `data/scan_results.json` |
 | `--max-ips` | Geo | Лимит IP в диапазоне (default 256) |
 | `--auto-reclass` | Geo | Авто-переклассификация |
 | `--quiet` | Geo | С `--auto-reclass` |
@@ -1030,7 +1035,7 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 | `--no-egress` | Geo | Без egress/NAT проверки |
 | `--ptr-scan` | Geo | Bulk PTR для `-r` (rate-limit `--ptr-qps`) |
 | `--ptr-qps` | Geo | PTR queries/sec (default 10) |
-| `--ptr-save` | Geo | Сохранить в `ptr_sessions/` |
+| `--ptr-save` | Geo | Сохранить в `data/sessions/ptr/` |
 | `--speed-test` | Diag | ICMP + Cloudflare HTTP (parallel streams) |
 | `--speed-streams N` | Diag | Число HTTP-потоков для speed-test (default 4) |
 | `--trace-monitor HOST` | Diag | Монитор маршрута |
@@ -1067,7 +1072,9 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 | `--owasp-ip` | OWASP | IP для pipeline |
 | `--owasp-domain` | OWASP | Домен для pipeline/Amass |
 | `--owasp-nettacker-run` | OWASP | Nettacker в pipeline |
-| `--owasp-save` | OWASP | `owasp_sessions/` |
+| `--owasp-save` | OWASP | `data/sessions/owasp/` |
+| `--maintain-db` | Meta | Обслуживание `data/asn_database.json` (dedupe, prune, validate) |
+| `--validate-db` | Meta | Только проверка схемы/пулов без записи |
 | `--check-deps` | Meta | Проверка зависимостей |
 | `--check-deps-group` | Meta | minimal, dns, pcap, owasp, full… |
 | `--check-deps-hints` | Meta | Подсказки установки |
@@ -1076,7 +1083,9 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 
 ## Форматы JSON-файлов
 
-### `scan_results.json` (флаг `-s` / сохранение отчёта)
+Все пути ниже — относительно корня репозитория. Старые каталоги в корне (`trace_sessions/`, `dns_sessions/`, `owasp_sessions/`, `ptr_sessions/`, `network capture/`) при первом запуске переносятся в `data/` модулем `paths.py`.
+
+### `data/scan_results.json` (флаг `-s` / сохранение отчёта)
 
 ```json
 {
@@ -1108,7 +1117,7 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 }
 ```
 
-### `trace_sessions/*.json`
+### `data/sessions/trace/*.json`
 
 ```json
 {
@@ -1132,7 +1141,7 @@ Workflow **Manual Run** (`.github/workflows/manual-run.yml`):
 
 Legacy: `"format": "ip_checker_trace_v1"` — тоже читается.
 
-### `dns_sessions/*.json`
+### `data/sessions/dns/*.json`
 
 ```json
 {
@@ -1143,7 +1152,7 @@ Legacy: `"format": "ip_checker_trace_v1"` — тоже читается.
 }
 ```
 
-### `owasp_sessions/*.json`
+### `data/sessions/owasp/*.json`
 
 ```json
 {
@@ -1153,7 +1162,7 @@ Legacy: `"format": "ip_checker_trace_v1"` — тоже читается.
 }
 ```
 
-### `asn_database.json` (фрагмент)
+### `data/asn_database.json` (фрагмент)
 
 ```json
 {
@@ -1204,7 +1213,7 @@ Legacy: `"format": "ip_checker_trace_v1"` — тоже читается.
 | Проблема | Что проверить |
 |----------|----------------|
 | WHOIS не работает | `whois 8.8.8.8`, интернет, таймаут 20 с в UI |
-| IP не в базе | Flow unknown IP или правка `asn_database.json` |
+| IP не в базе | Flow unknown IP, меню **6** / `--maintain-db`, или правка `data/asn_database.json` |
 | `--quiet` молчит не так | Только с `--auto-reclass` |
 | Нет `p`/`q` в trace | Нужен TTY |
 | PCAP пустой | `sudo`, верный интерфейс (меню **5**) |
