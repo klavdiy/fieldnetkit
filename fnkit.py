@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-IP Address Geolocation Checker for macOS
-Checks if IP addresses are in their expected geographic locations
+FieldNet Kit (FNkit) — portable network intelligence workbench.
+
+IP/ASN geo integrity, DNS exposure graph, network diagnostics, PCAP, OWASP checks.
 """
 
 import json
@@ -61,8 +62,8 @@ TRANSLATIONS = {
         "menu_1": "1. English",
         "menu_2": "2. Русский",
         "menu_prompt": "Select (1 or 2): ",
-        "app_title": "IP Address Geolocation Checker",
-        "app_subtitle": "Verify if IPs are in their expected geographic locations",
+        "app_title": "FieldNet Kit (FNkit)",
+        "app_subtitle": "Portable network intelligence: IP/ASN trust, DNS, diagnostics & exposure checks",
         "db_path": "Database: ",
         "checking": "Checking IP: ",
         "matches": "✓ Matches expected location",
@@ -237,8 +238,8 @@ TRANSLATIONS = {
         "menu_1": "1. English",
         "menu_2": "2. Русский",
         "menu_prompt": "Выберите (1 или 2): ",
-        "app_title": "Проверка Геолокации IP Адресов",
-        "app_subtitle": "Проверка соответствия IP их ожидаемым географическим местоположениям",
+        "app_title": "FieldNet Kit (FNkit)",
+        "app_subtitle": "Полевой сетевой набор: IP/ASN, DNS, диагностика и проверка экспозиции",
         "db_path": "База данных: ",
         "checking": "Проверка IP: ",
         "matches": "✓ Соответствует ожидаемому местоположению",
@@ -1834,7 +1835,8 @@ def assess_data_authenticity(
 def parse_cli_args():
     """Parse command-line arguments for non-interactive mode."""
     parser = argparse.ArgumentParser(
-        description="IP Address Geolocation Checker - Verify if IPs are in expected locations"
+        prog="fnkit",
+        description="FieldNet Kit (FNkit) — IP/ASN geo integrity, DNS graph, network diagnostics & exposure checks",
     )
     parser.add_argument("-i", "--ip", help="Single IP address to check")
     parser.add_argument(

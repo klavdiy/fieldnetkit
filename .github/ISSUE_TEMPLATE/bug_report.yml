@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Заполните поля ниже. Уязвимости — по [политике безопасности](https://github.com/klavdiy/ip_checker/blob/main/.github/SECURITY.md), без публикации эксплойта в Issue.
+        Заполните поля ниже. Уязвимости — по [политике безопасности](https://github.com/klavdiy/fieldnetkit/blob/main/.github/SECURITY.md), без публикации эксплойта в Issue.
   - type: textarea
     id: what
     attributes:
@@ -29,7 +29,7 @@ body:
       placeholder: |
         OS: …
         Python: …
-        Команда: python3 ip_checker.py …
+        Команда: python3 fnkit.py …
     validations:
       required: true
   - type: textarea

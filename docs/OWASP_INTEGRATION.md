@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart LR
-  subgraph ip_checker
+  subgraph fnkit [FieldNet Kit]
     M11[Menu 11 OWASP]
     CTX[Last IP context]
     HDR[Secure Headers built-in]
@@ -30,7 +30,7 @@ flowchart LR
 
 ## Links to project components
 
-| ip_checker part | OWASP step | Automation idea |
+| FNkit component | OWASP step | Automation idea |
 |-----------------|------------|-----------------|
 | `check_single_ip` → context | Pipeline default IP | After IP check, menu 11 pre-fills IP |
 | `dns_diag` seed domain | Amass passive | `example.com` from DNS graph → Amass |
@@ -43,19 +43,19 @@ flowchart LR
 
 ```bash
 # Built-in Secure Headers (no extra install)
-python3 ip_checker.py --owasp-headers https://example.com
+python3 fnkit.py --owasp-headers https://example.com
 
 # WSTG pointers only (links)
-python3 ip_checker.py --owasp-wstg
+python3 fnkit.py --owasp-wstg
 
 # Amass (requires: brew install amass / go install, etc.)
-python3 ip_checker.py --owasp-amass example.com --owasp-save
+python3 fnkit.py --owasp-amass example.com --owasp-save
 
 # Full pipeline: headers + amass + WSTG; Nettacker only with explicit flag
-python3 ip_checker.py --owasp-pipeline --owasp-ip 203.0.113.10 --owasp-domain example.com --owasp-save
+python3 fnkit.py --owasp-pipeline --owasp-ip 203.0.113.10 --owasp-domain example.com --owasp-save
 
 # Pipeline including Nettacker port_scan (AGPL tool must be installed)
-python3 ip_checker.py --owasp-pipeline --owasp-domain example.com --owasp-nettacker-run --owasp-save
+python3 fnkit.py --owasp-pipeline --owasp-domain example.com --owasp-nettacker-run --owasp-save
 ```
 
 ## Interactive flow (menu 11 → 1)
@@ -74,7 +74,7 @@ python3 ip_checker.py --owasp-pipeline --owasp-domain example.com --owasp-nettac
 # Optional job — does not install Amass/Nettacker by default
 - name: OWASP headers on staging
   run: |
-    python3 ip_checker.py --owasp-headers "${{ vars.STAGING_URL }}" --owasp-save
+    python3 fnkit.py --owasp-headers "${{ vars.STAGING_URL }}" --owasp-save
 ```
 
 ## Future implementation ideas
@@ -91,7 +91,7 @@ python3 ip_checker.py --owasp-pipeline --owasp-domain example.com --owasp-nettac
 # Amass (macOS)
 brew install amass
 
-# Nettacker (AGPL) — clone and run; not a pip dependency of ip_checker
+# Nettacker (AGPL) — clone and run; not a pip dependency of FieldNet Kit (fnkit)
 git clone https://github.com/OWASP/Nettacker.git
 cd Nettacker && pip install -r requirements.txt
 python3 nettacker.py -h

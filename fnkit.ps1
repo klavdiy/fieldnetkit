@@ -1,12 +1,12 @@
-# IP Address Geolocation Checker — Windows launcher
-# Requires Python 3 on PATH. Optional: nmap, whois (Sysinternals or third-party), nslookup (built-in).
+# FieldNet Kit (FNkit) — Windows launcher
+# Requires Python 3 on PATH.
 
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$PyScript = Join-Path $ScriptDir "ip_checker.py"
+$PyScript = Join-Path $ScriptDir "fnkit.py"
 
 if (-not (Test-Path -LiteralPath $PyScript)) {
-    Write-Error "ip_checker.py not found: $PyScript"
+    Write-Error "fnkit.py not found: $PyScript"
     exit 1
 }
 

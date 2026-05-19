@@ -2,8 +2,8 @@
   "spdxVersion": "SPDX-2.3",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "name": "ip_checker-sbom",
-  "documentNamespace": "https://example.local/spdx/ip_checker/2cb73d3a0f3b",
+  "name": "fieldnetkit-sbom",
+  "documentNamespace": "https://example.local/spdx/fieldnetkit/2cb73d3a0f3b",
   "creationInfo": {
     "created": "2026-05-19T12:00:00Z",
     "creators": [
@@ -12,13 +12,13 @@
     "licenseListVersion": "3.25"
   },
   "documentDescribes": [
-    "SPDXRef-Package-ip_checker"
+    "SPDXRef-Package-fieldnetkit"
   ],
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-ip_checker",
-      "name": "ip_checker",
-      "versionInfo": "0.1.0",
+      "SPDXID": "SPDXRef-Package-fieldnetkit",
+      "name": "fieldnetkit",
+      "versionInfo": "0.2.0",
       "downloadLocation": "NOASSERTION",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
@@ -42,7 +42,7 @@
         }
       ],
       "primaryPackagePurpose": "FRAMEWORK",
-      "description": "Modules: ip_checker.py, network_diag.py, pcap_diag.py, dns_diag.py, owasp_toolkit.py"
+      "description": "Modules: fnkit.py, network_diag.py, pcap_diag.py, dns_diag.py, owasp_toolkit.py"
     },
     {
       "SPDXID": "SPDXRef-510544e60710",
@@ -60,7 +60,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: ip_checker.py"
+      "description": "Modules: fnkit.py"
     },
     {
       "SPDXID": "SPDXRef-57c99176b7f3",
@@ -96,7 +96,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: network_diag.py, ip_checker.py; Feature: diagnostics"
+      "description": "Modules: network_diag.py, fnkit.py; Feature: diagnostics"
     },
     {
       "SPDXID": "SPDXRef-76efa99bfde4",
@@ -132,7 +132,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: ip_checker.py; Feature: diagnostics"
+      "description": "Modules: fnkit.py; Feature: diagnostics"
     },
     {
       "SPDXID": "SPDXRef-24687a578232",
@@ -150,7 +150,7 @@
         }
       ],
       "primaryPackagePurpose": "APPLICATION",
-      "description": "Modules: ip_checker.py; Feature: scan"
+      "description": "Modules: fnkit.py; Feature: scan"
     },
     {
       "SPDXID": "SPDXRef-9a0b5935eedd",
@@ -222,7 +222,7 @@
         }
       ],
       "primaryPackagePurpose": "LIBRARY",
-      "description": "Modules: ip_checker.py; Feature: enrichment"
+      "description": "Modules: fnkit.py; Feature: enrichment"
     },
     {
       "SPDXID": "SPDXRef-d43940a3858a",
@@ -240,7 +240,7 @@
         }
       ],
       "primaryPackagePurpose": "LIBRARY",
-      "description": "Modules: ip_checker.py; Feature: enrichment"
+      "description": "Modules: fnkit.py; Feature: enrichment"
     },
     {
       "SPDXID": "SPDXRef-aaa7da05583c",
@@ -294,7 +294,7 @@
         }
       ],
       "primaryPackagePurpose": "OTHER",
-      "description": "Modules: ip_checker.py, dns_diag.py; Feature: core"
+      "description": "Modules: fnkit.py, dns_diag.py; Feature: core"
     },
     {
       "SPDXID": "SPDXRef-fc57b82df5d9",
@@ -348,97 +348,97 @@
         }
       ],
       "primaryPackagePurpose": "OTHER",
-      "description": "Modules: ip_checker.py; Feature: core"
+      "description": "Modules: fnkit.py; Feature: core"
     }
   ],
   "relationships": [
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-7f3f21bcf4db"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-510544e60710"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-57c99176b7f3"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-83f9a283d398"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-76efa99bfde4"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-eccf1220f06f"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-24687a578232"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-9a0b5935eedd"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-b26aa4d9c967"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-f2235cc92bee"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-d7133a91d1b9"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-d43940a3858a"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-aaa7da05583c"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-fb9b6e66aa23"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-18509dc2ccaa"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-fc57b82df5d9"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-e1e67bdda364"
     },
     {
-      "spdxElementId": "SPDXRef-Package-ip_checker",
+      "spdxElementId": "SPDXRef-Package-fieldnetkit",
       "relationshipType": "DEPENDS_ON",
       "relatedSpdxElement": "SPDXRef-0e8728032ecd"
     }

@@ -12,7 +12,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_PATH = REPO_ROOT / "dependencies.manifest.json"
-APP_NAME = "ip_checker"
+APP_NAME = "fieldnetkit"
 # Fixed timestamp keeps SBOM diffs stable unless manifest or version change.
 SBOM_TIMESTAMP = "2026-05-19T12:00:00Z"
 
@@ -56,22 +56,22 @@ def _component_from_dep(dep: Dict[str, Any]) -> Dict[str, Any]:
         comp["licenses"] = [{"license": {"id": lic}}]
     props: List[Dict[str, str]] = []
     if dep.get("feature_group"):
-        props.append({"name": "ip_checker:featureGroup", "value": dep["feature_group"]})
+        props.append({"name": "fnkit:featureGroup", "value": dep["feature_group"]})
     install = dep.get("install") or {}
     for platform, block in install.items():
         if isinstance(block, dict):
             for method, value in block.items():
                 if method == "note":
-                    props.append({"name": f"ip_checker:install:{platform}", "value": str(value)})
+                    props.append({"name": f"fnkit:install:{platform}", "value": str(value)})
                 elif isinstance(value, list):
                     props.append(
                         {
-                            "name": f"ip_checker:install:{platform}:{method}",
+                            "name": f"fnkit:install:{platform}:{method}",
                             "value": " ".join(str(v) for v in value),
                         }
                     )
                 else:
-                    props.append({"name": f"ip_checker:install:{platform}:{method}", "value": str(value)})
+                    props.append({"name": f"fnkit:install:{platform}:{method}", "value": str(value)})
     if props:
         comp["properties"] = props
     return comp
@@ -112,7 +112,7 @@ def _cyclonedx(manifest: Dict[str, Any], timestamp: str) -> Dict[str, Any]:
                 "name": APP_NAME,
                 "version": app_version,
                 "description": (
-                    "CLI: IP/ASN geo, network diagnostics, PCAP, DNS graph, OWASP toolkit bridge. "
+                    "FieldNet Kit (FNkit): IP/ASN geo integrity, network diagnostics, PCAP, DNS graph, OWASP bridge. "
                     "SBOM generated from dependencies.manifest.json"
                 ),
                 "licenses": [{"license": {"id": app_license}}],
@@ -162,7 +162,7 @@ def _spdx(manifest: Dict[str, Any], timestamp: str) -> Dict[str, Any]:
     app_license = app.get("license", "MIT")
     comps = _components(manifest)
     packages = [_spdx_package(c) for c in comps]
-    app_spdx_id = "SPDXRef-Package-ip_checker"
+    app_spdx_id = "SPDXRef-Package-fieldnetkit"
 
     relationships = [
         {

@@ -65,7 +65,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          command=(python ip_checker.py)
+          command=(python fnkit.py)
           mode_count=0
 
           if [[ -n "${INPUT_IP}" ]]; then
@@ -125,7 +125,7 @@ jobs:
           joined="$(printf '%q ' "${command[@]}")"
           printf '%s\n' "${joined}" > "${GITHUB_WORKSPACE}/.manual_run_cmd.txt"
 
-      - name: Run ip_checker
+      - name: Run fnkit
         shell: bash
         run: |
           set -euo pipefail

@@ -2,7 +2,7 @@
 
 ## Назначение
 
-SBOM описывает **все внешние зависимости** `ip_checker`: рантайм Python, pip-пакеты, системные CLI и сетевые сервисы. Источник правды — [`dependencies.manifest.json`](../dependencies.manifest.json); артефакты SBOM **генерируются** и не редактируются вручную.
+SBOM описывает **все внешние зависимости** `FieldNet Kit (fnkit)`: рантайм Python, pip-пакеты, системные CLI и сетевые сервисы. Источник правды — [`dependencies.manifest.json`](../dependencies.manifest.json); артефакты SBOM **генерируются** и не редактируются вручную.
 
 ## Файлы
 
@@ -54,11 +54,11 @@ python3 scripts/check_deps.py --group full --json
 python3 scripts/check_deps.py --group owasp --hints
 ```
 
-Из `ip_checker`:
+Из FieldNet Kit:
 
 ```bash
-python3 ip_checker.py --check-deps
-python3 ip_checker.py --check-deps --check-deps-group dns
+python3 fnkit.py --check-deps
+python3 fnkit.py --check-deps --check-deps-group dns
 ```
 
 ## Автоматическая установка
@@ -87,10 +87,10 @@ chmod +x scripts/install-deps.sh
 
 В `sbom.cdx.json` у компонентов могут быть properties вида:
 
-- `ip_checker:featureGroup` — группа функций
-- `ip_checker:install:macos:brew` — пример команды brew
-- `ip_checker:install:linux:apt` — пакеты apt
-- `ip_checker:install:windows:winget` — id winget
+- `fnkit:featureGroup` — группа функций
+- `fnkit:install:macos:brew` — пример команды brew
+- `fnkit:install:linux:apt` — пакеты apt
+- `fnkit:install:windows:winget` — id winget
 
 Это связывает SBOM с воспроизводимой установкой на разных ОС.
 
@@ -98,7 +98,7 @@ chmod +x scripts/install-deps.sh
 
 | Компонент | Лицензия (типично) |
 |-----------|-------------------|
-| ip_checker | MIT |
+| FieldNet Kit (`fieldnetkit`) | MIT |
 | dnspython | ISC |
 | geoip2 | Apache-2.0 |
 | IP2Location (pip) | MIT |

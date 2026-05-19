@@ -1,4 +1,4 @@
-# Contributing to ip_checker
+# Contributing to FieldNet Kit (FNkit)
 
 Спасибо за интерес к проекту. Ниже — как предложить изменения и на что обратить внимание.
 
@@ -13,8 +13,8 @@
 
 ```bash
 python3 scripts/check_deps.py --group minimal
-python3 ip_checker.py -h
-./ip_checker.sh          # INSTALL_DEPS=1 ./ip_checker.sh — установить deps перед запуском
+python3 fnkit.py -h
+./fnkit.sh               # INSTALL_DEPS=1 ./fnkit.sh — установить deps перед запуском
 ```
 
 ## Проверки перед PR
@@ -23,8 +23,8 @@ python3 ip_checker.py -h
 
 ```bash
 pip install -r requirements-dns.txt -r requirements-optional.txt
-python3 -m compileall -q ip_checker.py network_diag.py pcap_diag.py dns_diag.py owasp_toolkit.py
-python3 ip_checker.py -h
+python3 -m compileall -q fnkit.py network_diag.py pcap_diag.py dns_diag.py owasp_toolkit.py
+python3 fnkit.py -h
 python3 scripts/check_deps.py --group minimal --no-fail
 python3 tools/generate_sbom.py
 git diff --exit-code -- sbom.cdx.json sbom.spdx.json dependencies.manifest.json

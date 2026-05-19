@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-OWASP toolkit bridge for ip_checker (menu 11).
+OWASP toolkit bridge for FieldNet Kit / FNkit (menu 11).
 
 License model (see docs/OWASP_THIRD_PARTY.md):
-  - This file is MIT (same as ip_checker). It does NOT bundle Amass, Nettacker, WSTG, or Secure Headers content.
+  - This file is MIT (same as FieldNet Kit). It does NOT bundle Amass, Nettacker, WSTG, or Secure Headers content.
   - Amass / Nettacker: optional external CLIs invoked via subprocess when installed by the user.
   - Secure Headers: built-in HTTP header checks aligned with public OWASP guidance (no copied prose).
   - WSTG: curated checklist with links only (no substantial reproduction of CC-BY-SA text).
@@ -25,7 +25,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 OWASP_SESSIONS_DIR = SCRIPT_DIR / "owasp_sessions"
-OWASP_FORMAT_V1 = "ip_checker_owasp_v1"
+OWASP_FORMAT_V1 = "fnkit_owasp_v1"
+LEGACY_OWASP_FORMAT_V1 = "ip_checker_owasp_v1"
 
 C_RESET = "\033[0m"
 C_BOLD = "\033[1m"
@@ -320,7 +321,7 @@ def fetch_response_headers(url: str, timeout: float = 15.0) -> Tuple[Dict[str, s
             req = urllib.request.Request(
                 url,
                 method=method,
-                headers={"User-Agent": "ip_checker-owasp-toolkit/1.0"},
+                headers={"User-Agent": "fnkit-owasp-toolkit/1.0"},
             )
             with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
                 return {k.lower(): v.strip() for k, v in resp.headers.items()}, None
@@ -556,7 +557,7 @@ def run_pipeline_interactive(lang: str) -> None:
 def print_legal_notice(lang: str) -> None:
     print(f"\n{C_BOLD}{msg(lang, 'legal_title')}{C_RESET}\n")
     lines = [
-        ("ip_checker (this repo)", "MIT — see LICENSE"),
+        ("FieldNet Kit / fnkit (this repo)", "MIT — see LICENSE"),
         ("Amass", "Apache-2.0 — external CLI, not bundled"),
         ("Nettacker", "AGPL-3.0 — external CLI; if you modify/distribute Nettacker, comply with AGPL"),
         ("WSTG", "CC-BY-SA-4.0 — we only link; no substantial text copied"),
@@ -650,7 +651,7 @@ def run_owasp_menu(lang: str) -> None:
 
 
 def handle_owasp_cli(args: Any, *, lang: str = "en") -> None:
-    """Entry for non-interactive OWASP flags from ip_checker.py."""
+    """Entry for non-interactive OWASP flags from fnkit.py."""
     steps: List[Dict[str, Any]] = []
     ip = getattr(args, "owasp_ip", None)
     domain = normalize_domain(getattr(args, "owasp_domain", "") or "") if getattr(args, "owasp_domain", None) else None

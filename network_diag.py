@@ -38,7 +38,7 @@ try:
 except ImportError:
     msvcrt = None  # type: ignore[assignment]
 
-# --- minimal ANSI (избегаем циклического импорта ip_checker.Colors)
+# --- minimal ANSI (избегаем циклического импорта fnkit.Colors)
 C_RESET = "\033[0m"
 C_BOLD = "\033[1m"
 C_CYAN = "\033[96m"
@@ -48,7 +48,8 @@ C_FAIL = "\033[91m"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 TRACE_SESSIONS_DIR = SCRIPT_DIR / "trace_sessions"
-TRACE_FORMAT_V1 = "ip_checker_trace_v1"
+TRACE_FORMAT_V1 = "fnkit_trace_v1"
+LEGACY_TRACE_FORMAT_V1 = "ip_checker_trace_v1"
 
 # pick_active_interface_for_trace_save() returns this if user aborts during selection
 _TRACE_IFACE_PICK_CANCELLED = object()
@@ -193,7 +194,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
 }
 
 HTTP_UA = (
-    "Mozilla/5.0 (compatible; ip_checker/1.0; +https://github.com/) "
+    "Mozilla/5.0 (compatible; fnkit/1.0; fieldnetkit) "
     "AppleWebKit/537.36 (KHTML, like Gecko)"
 )
 SPARK = "▁▂▃▄▅▆▇█"
@@ -874,7 +875,8 @@ def replay_trace_session(
     source_label: Optional[str] = None,
 ) -> bool:
     """Replay rounds from loaded session dict. Returns False if format invalid, True otherwise."""
-    if data.get("format") != TRACE_FORMAT_V1:
+    fmt = data.get("format")
+    if fmt not in (TRACE_FORMAT_V1, LEGACY_TRACE_FORMAT_V1):
         print(f"{C_FAIL}{localized(lang, 'trace_replay_bad')}{C_RESET}")
         return False
     target = data.get("target", "?")

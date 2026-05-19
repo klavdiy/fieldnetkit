@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install ip_checker dependencies on macOS or Linux (brew/apt + pip).
+# Install FieldNet Kit (fnkit) dependencies on macOS or Linux (brew/apt + pip).
 # Usage: ./scripts/install-deps.sh [minimal|full|dns|pcap|owasp|enrichment|diagnostics|scan]
 set -euo pipefail
 

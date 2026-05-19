@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify ip_checker dependencies from dependencies.manifest.json (all platforms)."""
+"""Verify FieldNet Kit (fnkit) dependencies from dependencies.manifest.json (all platforms)."""
 
 from __future__ import annotations
 
@@ -96,7 +96,7 @@ def check_one(dep: Dict[str, Any], *, os_id: str) -> Tuple[str, str, str]:
     if kind == "network":
         url = check.get("url", "")
         try:
-            req = urllib.request.Request(url, method="GET", headers={"User-Agent": "ip_checker-check-deps/1.0"})
+            req = urllib.request.Request(url, method="GET", headers={"User-Agent": "fnkit-check-deps/1.0"})
             with urllib.request.urlopen(req, timeout=8) as resp:
                 if 200 <= resp.status < 500:
                     return "ok", f"HTTP {resp.status}", scope
@@ -164,7 +164,7 @@ def run_check(
     if json_out:
         print(json.dumps({"os": os_id, "groups": groups, "results": rows}, indent=2, ensure_ascii=False))
     else:
-        print(f"ip_checker dependencies (OS: {os_id}, groups: {', '.join(groups)})\n")
+        print(f"FieldNet Kit (fnkit) dependencies (OS: {os_id}, groups: {', '.join(groups)})\n")
         print(f"{'ID':<22} {'SCOPE':<10} {'STATUS':<8} DETAIL")
         print("-" * 72)
         for r in rows:
@@ -198,7 +198,7 @@ def install_hints(manifest: Dict[str, Any], groups: List[str]) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Check ip_checker external dependencies")
+    parser = argparse.ArgumentParser(description="Check FieldNet Kit (fnkit) external dependencies")
     parser.add_argument(
         "--group",
         action="append",

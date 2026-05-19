@@ -1,4 +1,4 @@
-# Install ip_checker dependencies on Windows (winget/choco + pip).
+# Install FieldNet Kit (fnkit) dependencies on Windows (winget/choco + pip).
 # Usage: .\scripts\install-deps.ps1 [-Profile minimal|full|dns|pcap|owasp|enrichment]
 
 param(

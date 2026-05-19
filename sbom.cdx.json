@@ -3,7 +3,7 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
   "version": 1,
-  "serialNumber": "urn:uuid:f15e18f8-615d-5ad2-b675-7f3c000d5ebf",
+  "serialNumber": "urn:uuid:bfac2952-b3a0-5688-9963-6cabbcb5c0d6",
   "metadata": {
     "timestamp": "2026-05-19T12:00:00Z",
     "tools": [
@@ -14,15 +14,15 @@
       },
       {
         "name": "dependencies.manifest.json",
-        "version": "ip_checker_deps/1"
+        "version": "fnkit_deps/1"
       }
     ],
     "component": {
-      "bom-ref": "app:ip_checker@0.1.0",
+      "bom-ref": "app:fieldnetkit@0.2.0",
       "type": "application",
-      "name": "ip_checker",
-      "version": "0.1.0",
-      "description": "CLI: IP/ASN geo, network diagnostics, PCAP, DNS graph, OWASP toolkit bridge. SBOM generated from dependencies.manifest.json",
+      "name": "fieldnetkit",
+      "version": "0.2.0",
+      "description": "FieldNet Kit (FNkit): IP/ASN geo integrity, network diagnostics, PCAP, DNS graph, OWASP bridge. SBOM generated from dependencies.manifest.json",
       "licenses": [
         {
           "license": {
@@ -38,7 +38,7 @@
       "name": "Python",
       "purl": "pkg:generic/python@3.10",
       "scope": "required",
-      "description": "Modules: ip_checker.py, network_diag.py, pcap_diag.py, dns_diag.py, owasp_toolkit.py",
+      "description": "Modules: fnkit.py, network_diag.py, pcap_diag.py, dns_diag.py, owasp_toolkit.py",
       "version": "3.10",
       "licenses": [
         {
@@ -49,19 +49,19 @@
       ],
       "properties": [
         {
-          "name": "ip_checker:install:macos:brew",
+          "name": "fnkit:install:macos:brew",
           "value": "python@3.12"
         },
         {
-          "name": "ip_checker:install:linux:apt",
+          "name": "fnkit:install:linux:apt",
           "value": "python3 python3-pip python3-venv"
         },
         {
-          "name": "ip_checker:install:windows:winget",
+          "name": "fnkit:install:windows:winget",
           "value": "Python.Python.3.12"
         },
         {
-          "name": "ip_checker:install:windows:choco",
+          "name": "fnkit:install:windows:choco",
           "value": "python"
         }
       ],
@@ -72,23 +72,23 @@
       "name": "whois",
       "purl": "pkg:generic/whois@1.0",
       "scope": "required",
-      "description": "Modules: ip_checker.py",
+      "description": "Modules: fnkit.py",
       "version": "1.0+",
       "properties": [
         {
-          "name": "ip_checker:install:macos:brew",
+          "name": "fnkit:install:macos:brew",
           "value": "whois"
         },
         {
-          "name": "ip_checker:install:linux:apt",
+          "name": "fnkit:install:linux:apt",
           "value": "whois"
         },
         {
-          "name": "ip_checker:install:windows:choco",
+          "name": "fnkit:install:windows:choco",
           "value": "whois"
         },
         {
-          "name": "ip_checker:install:windows",
+          "name": "fnkit:install:windows",
           "value": "Or Sysinternals / third-party whois.exe on PATH"
         }
       ],
@@ -102,15 +102,15 @@
       "description": "Modules: network_diag.py",
       "properties": [
         {
-          "name": "ip_checker:install:macos",
+          "name": "fnkit:install:macos",
           "value": "Preinstalled on macOS"
         },
         {
-          "name": "ip_checker:install:linux:apt",
+          "name": "fnkit:install:linux:apt",
           "value": "iputils-ping"
         },
         {
-          "name": "ip_checker:install:windows",
+          "name": "fnkit:install:windows",
           "value": "Built into Windows"
         }
       ],
@@ -121,22 +121,22 @@
       "name": "traceroute",
       "purl": "pkg:generic/traceroute",
       "scope": "optional",
-      "description": "Modules: network_diag.py, ip_checker.py; Feature: diagnostics",
+      "description": "Modules: network_diag.py, fnkit.py; Feature: diagnostics",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "diagnostics"
         },
         {
-          "name": "ip_checker:install:macos",
+          "name": "fnkit:install:macos",
           "value": "Often preinstalled"
         },
         {
-          "name": "ip_checker:install:linux:apt",
+          "name": "fnkit:install:linux:apt",
           "value": "traceroute"
         },
         {
-          "name": "ip_checker:install:windows",
+          "name": "fnkit:install:windows",
           "value": "Use tracert (built-in)"
         }
       ],
@@ -150,11 +150,11 @@
       "description": "Modules: network_diag.py; Feature: diagnostics",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "diagnostics"
         },
         {
-          "name": "ip_checker:install:windows",
+          "name": "fnkit:install:windows",
           "value": "Built into Windows"
         }
       ],
@@ -165,22 +165,22 @@
       "name": "nslookup",
       "purl": "pkg:generic/nslookup",
       "scope": "optional",
-      "description": "Modules: ip_checker.py; Feature: diagnostics",
+      "description": "Modules: fnkit.py; Feature: diagnostics",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "diagnostics"
         },
         {
-          "name": "ip_checker:install:macos",
+          "name": "fnkit:install:macos",
           "value": "Preinstalled"
         },
         {
-          "name": "ip_checker:install:linux:apt",
+          "name": "fnkit:install:linux:apt",
           "value": "dnsutils"
         },
         {
-          "name": "ip_checker:install:windows",
+          "name": "fnkit:install:windows",
           "value": "Built into Windows"
         }
       ],
@@ -191,26 +191,26 @@
       "name": "nmap",
       "purl": "pkg:generic/nmap",
       "scope": "optional",
-      "description": "Modules: ip_checker.py; Feature: scan",
+      "description": "Modules: fnkit.py; Feature: scan",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "scan"
         },
         {
-          "name": "ip_checker:install:macos:brew",
+          "name": "fnkit:install:macos:brew",
           "value": "nmap"
         },
         {
-          "name": "ip_checker:install:linux:apt",
+          "name": "fnkit:install:linux:apt",
           "value": "nmap"
         },
         {
-          "name": "ip_checker:install:windows:choco",
+          "name": "fnkit:install:windows:choco",
           "value": "nmap"
         },
         {
-          "name": "ip_checker:install:windows:winget",
+          "name": "fnkit:install:windows:winget",
           "value": "Insecure.Nmap"
         }
       ],
@@ -224,19 +224,19 @@
       "description": "Modules: pcap_diag.py; Feature: pcap",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "pcap"
         },
         {
-          "name": "ip_checker:install:macos",
+          "name": "fnkit:install:macos",
           "value": "Preinstalled on many macOS versions"
         },
         {
-          "name": "ip_checker:install:linux:apt",
+          "name": "fnkit:install:linux:apt",
           "value": "tcpdump"
         },
         {
-          "name": "ip_checker:install:windows",
+          "name": "fnkit:install:windows",
           "value": "Use WSL or Npcap build; not native on Windows"
         }
       ],
@@ -250,23 +250,23 @@
       "description": "Modules: pcap_diag.py, dns_diag.py; Feature: pcap",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "pcap"
         },
         {
-          "name": "ip_checker:install:macos:brew",
+          "name": "fnkit:install:macos:brew",
           "value": "wireshark"
         },
         {
-          "name": "ip_checker:install:linux:apt",
+          "name": "fnkit:install:linux:apt",
           "value": "tshark wireshark-common"
         },
         {
-          "name": "ip_checker:install:windows:choco",
+          "name": "fnkit:install:windows:choco",
           "value": "wireshark"
         },
         {
-          "name": "ip_checker:install:windows:winget",
+          "name": "fnkit:install:windows:winget",
           "value": "WiresharkFoundation.Wireshark"
         }
       ],
@@ -288,11 +288,11 @@
       ],
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "dns"
         },
         {
-          "name": "ip_checker:install:all:pip",
+          "name": "fnkit:install:all:pip",
           "value": "-r requirements-dns.txt"
         }
       ],
@@ -303,7 +303,7 @@
       "name": "geoip2",
       "purl": "pkg:pypi/geoip2",
       "scope": "optional",
-      "description": "Modules: ip_checker.py; Feature: enrichment",
+      "description": "Modules: fnkit.py; Feature: enrichment",
       "version": "4.8.0",
       "licenses": [
         {
@@ -314,11 +314,11 @@
       ],
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "enrichment"
         },
         {
-          "name": "ip_checker:install:all:pip",
+          "name": "fnkit:install:all:pip",
           "value": "geoip2>=4.8.0"
         }
       ],
@@ -329,7 +329,7 @@
       "name": "IP2Location",
       "purl": "pkg:pypi/ip2location",
       "scope": "optional",
-      "description": "Modules: ip_checker.py; Feature: enrichment",
+      "description": "Modules: fnkit.py; Feature: enrichment",
       "version": "8.10.0",
       "licenses": [
         {
@@ -340,11 +340,11 @@
       ],
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "enrichment"
         },
         {
-          "name": "ip_checker:install:all:pip",
+          "name": "fnkit:install:all:pip",
           "value": "IP2Location>=8.10.0"
         }
       ],
@@ -365,23 +365,23 @@
       ],
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "owasp"
         },
         {
-          "name": "ip_checker:install:macos:brew",
+          "name": "fnkit:install:macos:brew",
           "value": "amass"
         },
         {
-          "name": "ip_checker:install:linux",
+          "name": "fnkit:install:linux",
           "value": "https://github.com/owasp-amass/amass#installation"
         },
         {
-          "name": "ip_checker:install:windows:choco",
+          "name": "fnkit:install:windows:choco",
           "value": "amass"
         },
         {
-          "name": "ip_checker:install:windows",
+          "name": "fnkit:install:windows",
           "value": "Or download release binary"
         }
       ],
@@ -402,11 +402,11 @@
       ],
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "owasp"
         },
         {
-          "name": "ip_checker:install:all",
+          "name": "fnkit:install:all",
           "value": "git clone https://github.com/OWASP/Nettacker && pip install -r requirements.txt (AGPL-3.0)"
         }
       ],
@@ -417,14 +417,14 @@
       "name": "ip-api.com",
       "purl": "pkg:generic/ip-api.com",
       "scope": "required",
-      "description": "Modules: ip_checker.py, dns_diag.py; Feature: core",
+      "description": "Modules: fnkit.py, dns_diag.py; Feature: core",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "core"
         },
         {
-          "name": "ip_checker:install:all",
+          "name": "fnkit:install:all",
           "value": "Public HTTPS/HTTP API; no install"
         }
       ],
@@ -438,11 +438,11 @@
       "description": "Modules: dns_diag.py; Feature: dns",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "dns"
         },
         {
-          "name": "ip_checker:install:all",
+          "name": "fnkit:install:all",
           "value": "Public certificate transparency API"
         }
       ],
@@ -456,11 +456,11 @@
       "description": "Modules: network_diag.py; Feature: speedtest",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "speedtest"
         },
         {
-          "name": "ip_checker:install:all",
+          "name": "fnkit:install:all",
           "value": "Cloudflare speed test endpoints"
         }
       ],
@@ -471,14 +471,14 @@
       "name": "RIR WHOIS",
       "purl": "pkg:generic/rir-whois",
       "scope": "required",
-      "description": "Modules: ip_checker.py; Feature: core",
+      "description": "Modules: fnkit.py; Feature: core",
       "properties": [
         {
-          "name": "ip_checker:featureGroup",
+          "name": "fnkit:featureGroup",
           "value": "core"
         },
         {
-          "name": "ip_checker:install:all",
+          "name": "fnkit:install:all",
           "value": "Regional registries; no separate install"
         }
       ],
@@ -487,7 +487,7 @@
   ],
   "dependencies": [
     {
-      "ref": "app:ip_checker@0.1.0",
+      "ref": "app:fieldnetkit@0.2.0",
       "dependsOn": [
         "pkg:generic/python@3.10",
         "pkg:generic/whois@1.0",

@@ -1,8 +1,10 @@
 {
-  "schema": "ip_checker_deps/1",
+  "schema": "fnkit_deps/1",
   "app": {
-    "name": "ip_checker",
-    "version": "0.1.0",
+    "name": "fieldnetkit",
+    "display_name": "FieldNet Kit",
+    "short_name": "FNkit",
+    "version": "0.2.0",
     "license": "MIT"
   },
   "feature_groups": {
@@ -24,7 +26,7 @@
       "version": ">=3.10",
       "purl": "pkg:generic/python@3.10",
       "license": "PSF-2.0",
-      "modules": ["ip_checker.py", "network_diag.py", "pcap_diag.py", "dns_diag.py", "owasp_toolkit.py"],
+      "modules": ["fnkit.py", "network_diag.py", "pcap_diag.py", "dns_diag.py", "owasp_toolkit.py"],
       "check": { "kind": "python_version", "min": "3.10" },
       "install": {
         "macos": { "brew": ["python@3.12"] },
@@ -40,7 +42,7 @@
       "version": "1.0+",
       "purl": "pkg:generic/whois@1.0",
       "license": "NOASSERTION",
-      "modules": ["ip_checker.py"],
+      "modules": ["fnkit.py"],
       "check": { "kind": "cli", "bins": ["whois"] },
       "install": {
         "macos": { "brew": ["whois"] },
@@ -71,7 +73,7 @@
       "purl": "pkg:generic/traceroute",
       "license": "NOASSERTION",
       "feature_group": "diagnostics",
-      "modules": ["network_diag.py", "ip_checker.py"],
+      "modules": ["network_diag.py", "fnkit.py"],
       "check": { "kind": "cli_any", "bins": ["traceroute", "traceroute6", "tracert"] },
       "install": {
         "macos": { "note": "Often preinstalled" },
@@ -100,7 +102,7 @@
       "purl": "pkg:generic/nslookup",
       "license": "NOASSERTION",
       "feature_group": "diagnostics",
-      "modules": ["ip_checker.py"],
+      "modules": ["fnkit.py"],
       "check": { "kind": "cli", "bins": ["nslookup"] },
       "install": {
         "macos": { "note": "Preinstalled" },
@@ -116,7 +118,7 @@
       "purl": "pkg:generic/nmap",
       "license": "NOASSERTION",
       "feature_group": "scan",
-      "modules": ["ip_checker.py"],
+      "modules": ["fnkit.py"],
       "check": { "kind": "cli", "bins": ["nmap"] },
       "install": {
         "macos": { "brew": ["nmap"] },
@@ -180,7 +182,7 @@
       "purl": "pkg:pypi/geoip2",
       "license": "Apache-2.0",
       "feature_group": "enrichment",
-      "modules": ["ip_checker.py"],
+      "modules": ["fnkit.py"],
       "check": { "kind": "pip", "import": "geoip2", "requirements": "requirements-optional.txt" },
       "install": { "all": { "pip": ["geoip2>=4.8.0"] } }
     },
@@ -193,7 +195,7 @@
       "purl": "pkg:pypi/ip2location",
       "license": "MIT",
       "feature_group": "enrichment",
-      "modules": ["ip_checker.py"],
+      "modules": ["fnkit.py"],
       "check": { "kind": "pip", "import": "IP2Location", "requirements": "requirements-optional.txt" },
       "install": { "all": { "pip": ["IP2Location>=8.10.0"] } }
     },
@@ -237,7 +239,7 @@
       "purl": "pkg:generic/ip-api.com",
       "license": "NOASSERTION",
       "feature_group": "core",
-      "modules": ["ip_checker.py", "dns_diag.py"],
+      "modules": ["fnkit.py", "dns_diag.py"],
       "check": { "kind": "network", "url": "http://ip-api.com/json/1.1.1.1?fields=status" },
       "install": { "all": { "note": "Public HTTPS/HTTP API; no install" } }
     },
@@ -273,7 +275,7 @@
       "purl": "pkg:generic/rir-whois",
       "license": "NOASSERTION",
       "feature_group": "core",
-      "modules": ["ip_checker.py"],
+      "modules": ["fnkit.py"],
       "check": { "kind": "note", "message": "Reached via system whois client" },
       "install": { "all": { "note": "Regional registries; no separate install" } }
     }

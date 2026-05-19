@@ -39,7 +39,8 @@ except ImportError:
 SCRIPT_DIR = Path(__file__).resolve().parent
 DNS_SESSIONS_DIR = SCRIPT_DIR / "dns_sessions"
 DNS_GRAPH_DIR = SCRIPT_DIR / "dns_graph"
-DNS_FORMAT_V1 = "ip_checker_dns_v1"
+DNS_FORMAT_V1 = "fnkit_dns_v1"
+LEGACY_DNS_FORMAT_V1 = "ip_checker_dns_v1"
 
 C_RESET = "\033[0m"
 C_BOLD = "\033[1m"
@@ -491,7 +492,7 @@ def apply_wordlist(
 
 def fetch_crtsh_subdomains(domain: str, *, timeout: float = 15.0) -> List[str]:
     url = f"https://crt.sh/?q=%25.{domain}&output=json"
-    req = urllib.request.Request(url, headers={"User-Agent": "ip_checker-dns_diag/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "fnkit-dns_diag/1.0"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8", errors="replace"))
@@ -682,7 +683,7 @@ def save_session(session: Dict[str, Any], path: Optional[Path] = None) -> Path:
 def load_session(path: Path) -> Dict[str, Any]:
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
-    if data.get("format") != DNS_FORMAT_V1:
+    if data.get("format") not in (DNS_FORMAT_V1, LEGACY_DNS_FORMAT_V1):
         raise ValueError("unknown session format")
     return data
 
