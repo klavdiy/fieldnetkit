@@ -1,12 +1,10 @@
-# FieldNet Kit (FNkit)
+# FieldNet Kit
 
 **Портативная сетевая разведка из одного терминала** — сверка IP/ASN с вашей базой, контекст BGP и passive DNS, затем DNS-граф, trace, PCAP или OWASP-проверки без переключения между инструментами.
 
-> Ранее репозиторий назывался *ip_checker*. GitHub: **[klavdiy/fieldnetkit](https://github.com/klavdiy/fieldnetkit)**
-
 ---
 
-## За 15 секунд
+## Что делает набор
 
 Вставляете IP из алерта файрвола, тикета или `kubectl get svc`. **FNkit отвечает за один проход:** совпадает ли гео с ожидаемым ASN, кто владеет префиксом *прямо сейчас* (BGP), был ли адрес на Tor exit или CDN вчера (egress + passive DNS), куда писать по abuse — до того как вы откроете шесть вкладок или поверите `/8` в CMDB.
 
@@ -40,76 +38,6 @@ BGP origin: AS12389 — matches DB ASN, geo does not
 Вы продолжаете расследование, а не помечаете весь AS как «Германия» автоматически.
 
 </details>
-
----
-
-## Почему FNkit, а не …
-
-| Задача | Обычный набор | FNkit |
-|--------|---------------|-------|
-| «Чей это IP?» | whois + ip-api в браузере | Один TUI/CLI: гео + **ожидаемая страна из вашей БД** + mismatch/карантин |
-| Правда о префиксе | RIPEstat / bgp.tools | **Живой Cymru origin** vs статические пулы; пулы **≥ /20**, без ложного match по `/8` |
-| Исторический контекст | Вкладки VirusTotal, SecurityTrails | **passive DNS** + опциональные API-ключи (меню 7) в том же отчёте |
-| Поверхность атаки | Amass + httpx + свои скрипты | **OWASP pipeline**: headers (проверка значений), TLS, Amass, takeover |
-| Карта DNS | циклы dig, таблицы | **DNS-граф**: crawl, crt.sh, HTML, сравнение резолверов |
-| Форензика на ноутбуке | только Wireshark | **Захват/просмотр PCAP** + DNS-seed из `tshark` |
-
-FNkit не заменяет SaaS-сканеры — это **полевой верстак**, когда у вас уже есть shell и нужны обоснованные ответы быстро, по возможности без лишних облаков.
-
----
-
-## Скриншоты
-
-> Добавьте GIF/PNG в `docs/assets/` и пропишите ссылки здесь (PR приветствуются).
-
-| Экран | Файл (план) |
-|-------|-------------|
-| Баннер egress + главное меню | `docs/assets/menu-main.png` |
-| IP mismatch + карантин | `docs/assets/ip-mismatch.png` |
-| Монитор маршрута (TTY) | `docs/assets/trace-monitor.gif` |
-| HTML DNS-граф | `docs/assets/dns-graph.png` |
-| OWASP secure headers | `docs/assets/owasp-headers.png` |
-
-Пока нет ассетов — запустите локально:
-
-```bash
-./fnkit.sh    # меню + рамка egress
-python3 fnkit.py -i 1.1.1.1 --owasp-headers https://example.com
-```
-
----
-
-## Быстрый старт
-
-```bash
-chmod +x fnkit.sh scripts/install-deps.sh
-./scripts/install-deps.sh minimal    # Python, whois, ping
-./fnkit.sh
-```
-
-```bash
-python3 fnkit.py -h
-python3 fnkit.py --check-deps --check-deps-hints
-python3 fnkit.py -i 8.8.8.8
-```
-
-Windows: `.\scripts\install-deps.ps1 -Profile minimal` → `.\fnkit.ps1 -i 8.8.8.8`
-
-Опционально: `pip install -r requirements-dns.txt` (меню DNS), `requirements-optional.txt` (MaxMind / IP2Location).
-
----
-
-## Что внутри (кратко)
-
-| Область | Возможности |
-|---------|-------------|
-| **Доверие** | Локальная ASN-БД, geo mismatch, авто-переклассификация с карантином |
-| **Контекст** | BGP origin, passive DNS, сигналы egress/NAT |
-| **Диагностика** | Speed-test, параллельный монитор хопов, PCAP |
-| **DNS** | BFS crawl, crt.sh, сравнение резолверов, HTML vis-network |
-| **Безопасность** | OWASP headers/TLS, Amass, subdomain takeover, ссылки WSTG |
-| **Эксплуатация** | Раскладка `data/`, SBOM, CI validate, `--maintain-db` |
-
 
 ---
 
@@ -327,6 +255,7 @@ fieldnetkit/
 ├── fnkit.py                 # Точка входа CLI
 ├── fnkit.sh / fnkit.ps1     # Обёртки запуска
 ├── paths.py                 # Пути к data/ и lib/
+├── schema.py                # Версии схем JSON, миграции, совместимость
 ├── lib/                     # Модули Python
 │   ├── network_diag.py      # Speed-test, trace monitor, NIC
 │   ├── pcap_diag.py         # PCAP capture / show / verify
